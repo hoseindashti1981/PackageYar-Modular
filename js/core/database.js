@@ -1,62 +1,46 @@
 const DB_NAME =
 "PackageYarDB";
-
 const DB_VERSION =
 3;
-
-
+db = event.target.result;
 function setDatabaseStatus(
 text,
 className
 ){
-
 const element =
 document.getElementById(
 "dbStatus"
 );
-
 if(!element){
-
 return;
-
 }
-
 element.innerText =
 text;
-
 element.className =
 className || "";
-
 }
-
 function openDatabase(){
-
 return new Promise(
 function(resolve,reject){
-
 setDatabaseStatus(
 "در حال باز کردن...",
 ""
 );
-
 const request =
 indexedDB.open(
 DB_NAME,
 DB_VERSION
 );
-
 request.onupgradeneeded =
 function(event){
 
 const database =
 event.target.result;
-
 if(
 !database.objectStoreNames.contains(
 "customers"
 )
 ){
-
 const customers =
 database.createObjectStore(
 "customers",
@@ -65,7 +49,6 @@ keyPath:"id",
 autoIncrement:true
 }
 );
-
 customers.createIndex(
 "name",
 "name",
@@ -73,7 +56,6 @@ customers.createIndex(
 unique:false
 }
 );
-
 customers.createIndex(
 "phone",
 "phone",
@@ -81,15 +63,12 @@ customers.createIndex(
 unique:false
 }
 );
-
 }
-
 if(
 !database.objectStoreNames.contains(
 "devices"
 )
 ){
-
 const devices =
 database.createObjectStore(
 "devices",
@@ -98,7 +77,6 @@ keyPath:"id",
 autoIncrement:true
 }
 );
-
 devices.createIndex(
 "customerId",
 "customerId",
@@ -106,15 +84,12 @@ devices.createIndex(
 unique:false
 }
 );
-
 }
-
 if(
 !database.objectStoreNames.contains(
 "repairs"
 )
 ){
-
 const repairs =
 database.createObjectStore(
 "repairs",
@@ -123,7 +98,6 @@ keyPath:"id",
 autoIncrement:true
 }
 );
-
 repairs.createIndex(
 "customerId",
 "customerId",
@@ -131,7 +105,6 @@ repairs.createIndex(
 unique:false
 }
 );
-
 repairs.createIndex(
 "deviceId",
 "deviceId",
@@ -139,15 +112,12 @@ repairs.createIndex(
 unique:false
 }
 );
-
 }
-
 if(
 !database.objectStoreNames.contains(
 "products"
 )
 ){
-
 database.createObjectStore(
 "products",
 {
@@ -155,14 +125,11 @@ keyPath:"id",
 autoIncrement:true
 }
 );
-
 }
-
 // ====================== stockTransactions ======================
 if(
 !database.objectStoreNames.contains("stockTransactions")
 ){
-
     const stockStore = database.createObjectStore(
         "stockTransactions",
         {
@@ -170,7 +137,6 @@ if(
             autoIncrement:true
         }
     );
-
     // ایندکس‌های مفید برای جستجو و گزارش‌گیری
     stockStore.createIndex("productId", "productId", { unique: false });
     stockStore.createIndex("type", "type", { unique: false });
@@ -183,7 +149,6 @@ if(
 "purchaseInvoices"
 )
 ){
-
 database.createObjectStore(
 "purchaseInvoices",
 {
@@ -191,9 +156,7 @@ keyPath:"id",
 autoIncrement:true
 }
 );
-
 }
-
 if(
 !database.objectStoreNames.contains(
 "salesInvoices"
@@ -207,15 +170,12 @@ keyPath:"id",
 autoIncrement:true
 }
 );
-
 }
-
 if(
 !database.objectStoreNames.contains(
 "invoiceItems"
 )
 ){
-
 database.createObjectStore(
 "invoiceItems",
 {
