@@ -1,8 +1,8 @@
 
 function startNewRepair(){
 
-    let currentRepairParts = [];
-    let editingRepairId = null;
+     currentRepairParts = [];
+     editingRepairId = null;
 
 
     // پاک‌سازی وضعیت قبلی
