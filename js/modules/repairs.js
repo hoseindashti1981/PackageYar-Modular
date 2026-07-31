@@ -2905,41 +2905,59 @@ async function openSalesInvoiceFromRepair(repairId){
         renderSalesInvoiceForm(customers, products);
 
         setTimeout(function(){
-            // انتخاب مشتری
-            const select = document.getElementById("salesCustomerSelect");
-            if(select && currentSalesCustomerId){
-                select.value = String(currentSalesCustomerId);
-            }
+    // انتخاب مشتری
+    const select = document.getElementById("salesCustomerSelect");
+    if(select && currentSalesCustomerId){
+        select.value = String(currentSalesCustomerId);
+    }
 
-            // اجرت
-            const labor = document.getElementById("salesLaborCost");
-            if(labor){
-                labor.value = Number(repair.laborCost || 0);
-            }
+    // اجرت
+    const labor = document.getElementById("salesLaborCost");
+    if(labor){
+        labor.value = Number(repair.laborCost || 0);
+    }
 
-            // توضیح
-            const note = document.getElementById("salesInvoiceNote");
-            if(note){
-                note.value = "فاکتور مربوط به تعمیر شماره " + repair.id +
-                    (repair.type ? " (" + repair.type + ")" : "");
-            }
+    // توضیح
+    const note = document.getElementById("salesInvoiceNote");
+    if(note){
+        note.value = "فاکتور مربوط به تعمیر شماره " + repair.id +
+            (repair.type ? " (" + repair.type + ")" : "");
+    }
 
-            // عنوان
-            const title = document.querySelector("#inventoryPage .section-title");
-            if(title){
-                title.innerText = "🧾 فاکتور فروش از تعمیر #" + repair.id;
-            }
+    // عنوان
+    const title = document.querySelector("#inventoryPage .section-title");
+    if(title){
+        title.innerText = "🧾 فاکتور فروش از تعمیر #" + repair.id;
+    }
 
-            renderSalesInvoiceItems();
-            updateSalesInvoiceTotal();
+    // اقلام و مبلغ کل را محاسبه کن
+    renderSalesInvoiceItems();
+    updateSalesInvoiceTotal();
 
-            alert(
-                "فاکتور از روی تعمیر آماده شد.\n\n" +
-                "مشتری و قطعات و اجرت پر شده‌اند.\n" +
-                "قیمت‌ها را در صورت نیاز تغییر دهید و ثبت کنید.\n\n" +
-                "توجه: موجودی قطعات قبلاً در تعمیر کم شده و دوباره کم نمی‌شود."
-            );
-        }, 200);
+    // ---------- اضافه شده: کپی مبلغ پرداخت‌شده و وضعیت پرداخت از تعمیر ----------
+    const paidInput = document.getElementById("salesPaidAmount");
+    if(paidInput){
+        paidInput.value = Number(repair.paidAmount || 0);
+    }
+
+    const statusSelect = document.getElementById("salesPaymentStatus");
+    if(statusSelect){
+        statusSelect.value = repair.paymentStatus || "پرداخت کامل";
+
+        // اگر پرداخت ناقص بود، فیلد مبلغ پرداخت‌شده را قابل ویرایش نگه دار
+        if(repair.paymentStatus === "پرداخت ناقص"){
+            paidInput.readOnly = false;
+        }
+    }
+    // --------------------------------------------------------------------------
+
+    alert(
+        "فاکتور از روی تعمیر آماده شد.\n\n" +
+        "مشتری و قطعات و اجرت پر شده‌اند.\n" +
+        "قیمت‌ها را در صورت نیاز تغییر دهید و ثبت کنید.\n\n" +
+        "توجه: موجودی قطعات قبلاً در تعمیر کم شده و دوباره کم نمی‌شود."
+    );
+}, 200);
 
     }catch(error){
         console.error(error);
