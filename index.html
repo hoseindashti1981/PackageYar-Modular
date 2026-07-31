@@ -1,3 +1,1935 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+
+<head>
+
+<meta name="theme-color" content="#1f2937">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="پکیج‌یار">
+
+<link rel="manifest" href="./manifest.webmanifest">
+<link rel="apple-touch-icon" href="./icons/icon-192.png">
+<link rel="icon" type="image/png" sizes="192x192" href="./icons/icon-192.png">
+
+
+<meta charset="UTF-8">
+
+<meta name="viewport"
+content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+
+<title>پکیج‌یار</title>
+
+<style>
+
+*{
+box-sizing:border-box;
+-webkit-tap-highlight-color:transparent;
+}
+
+html{
+-webkit-text-size-adjust:100%;
+}
+
+body{
+margin:0;
+font-family:-apple-system,BlinkMacSystemFont,"Tahoma",sans-serif;
+background:#f4f5f7;
+color:#222;
+padding-bottom:90px;
+}
+
+button,
+input,
+textarea,
+select{
+font-family:inherit;
+font-size:16px;
+}
+
+input,
+textarea,
+select{
+-webkit-appearance:none;
+appearance:none;
+}
+
+input:focus,
+textarea:focus,
+select:focus{
+font-size:16px !important;
+outline:none;
+}
+
+button{
+font-size:16px;
+}
+
+header{
+background:#1f2937;
+color:white;
+padding:20px 18px 18px;
+padding-top:calc(20px + env(safe-area-inset-top));
+border-radius:0 0 25px 25px;
+}
+
+.header-top{
+display:flex;
+justify-content:space-between;
+align-items:center;
+}
+
+.logo{
+font-size:22px;
+font-weight:bold;
+}
+
+.subtitle{
+font-size:12px;
+opacity:.7;
+margin-top:5px;
+}
+
+.today{
+margin-top:18px;
+font-size:14px;
+}
+
+.container{
+padding:18px;
+max-width:900px;
+margin:auto;
+}
+
+.page{
+display:none;
+}
+
+.page.active{
+display:block;
+}
+
+.section-title{
+font-size:18px;
+font-weight:bold;
+margin:10px 0 15px;
+}
+
+.stats{
+display:grid;
+grid-template-columns:repeat(2,1fr);
+gap:12px;
+}
+
+.stat-card{
+background:white;
+padding:18px;
+border-radius:18px;
+box-shadow:0 3px 12px rgba(0,0,0,.05);
+}
+
+.stat-icon{
+font-size:25px;
+}
+
+.stat-title{
+margin-top:10px;
+font-size:13px;
+color:#777;
+}
+
+.stat-number{
+margin-top:5px;
+font-size:22px;
+font-weight:bold;
+}
+
+.quick-actions{
+display:grid;
+grid-template-columns:repeat(2,1fr);
+gap:12px;
+}
+
+.action{
+background:white;
+padding:18px 12px;
+border-radius:18px;
+text-align:center;
+box-shadow:0 3px 12px rgba(0,0,0,.05);
+cursor:pointer;
+}
+
+.action:active{
+transform:scale(.96);
+}
+
+.action-icon{
+font-size:30px;
+margin-bottom:8px;
+}
+
+.action-title{
+font-size:14px;
+font-weight:bold;
+}
+
+.bottom-nav{
+position:fixed;
+bottom:0;
+left:0;
+right:0;
+height:75px;
+background:white;
+border-top:1px solid #ddd;
+display:flex;
+justify-content:space-around;
+align-items:center;
+padding-bottom:env(safe-area-inset-bottom);
+z-index:100;
+}
+
+.nav-item{
+text-align:center;
+font-size:11px;
+color:#777;
+cursor:pointer;
+}
+
+.nav-icon{
+font-size:23px;
+margin-bottom:3px;
+}
+
+.nav-item.active{
+color:#111827;
+font-weight:bold;
+}
+
+.card{
+background:white;
+padding:18px;
+border-radius:18px;
+margin-bottom:15px;
+box-shadow:0 3px 12px rgba(0,0,0,.05);
+}
+
+.empty{
+text-align:center;
+color:#888;
+padding:40px 15px;
+}
+
+button{
+border:none;
+border-radius:12px;
+padding:12px 18px;
+cursor:pointer;
+}
+
+.primary-btn{
+background:#1f2937;
+color:white;
+}
+
+.secondary-btn{
+background:#e5e7eb;
+color:#111827;
+}
+
+.danger-btn{
+background:#dc2626;
+color:white;
+}
+
+.edit-btn{
+background:#f59e0b;
+color:white;
+}
+
+.success-btn{
+background:#16a34a;
+color:white;
+}
+
+input,
+textarea,
+select{
+display:block;
+width:100%;
+padding:13px;
+margin-top:8px;
+margin-bottom:12px;
+border:1px solid #ddd;
+border-radius:12px;
+outline:none;
+background:white;
+color:#222;
+font-size:16px !important;
+line-height:1.5;
+}
+
+textarea{
+min-height:90px;
+resize:vertical;
+}
+
+label{
+font-size:13px;
+color:#555;
+}
+
+.modal{
+display:none;
+position:fixed;
+inset:0;
+background:rgba(0,0,0,.5);
+z-index:200;
+padding:20px;
+}
+
+.modal.show{
+display:flex;
+align-items:center;
+justify-content:center;
+}
+
+.modal-content{
+background:white;
+width:100%;
+max-width:500px;
+max-height:90vh;
+overflow-y:auto;
+border-radius:22px;
+padding:20px;
+-webkit-overflow-scrolling:touch;
+}
+
+.modal-header{
+display:flex;
+justify-content:space-between;
+align-items:center;
+margin-bottom:20px;
+}
+
+.close{
+font-size:28px;
+cursor:pointer;
+}
+
+.search-box{
+position:relative;
+margin-bottom:15px;
+}
+
+.search-box input{
+margin:0;
+padding-right:45px;
+}
+
+.search-icon{
+position:absolute;
+right:15px;
+top:14px;
+z-index:2;
+}
+
+.customer-card{
+cursor:pointer;
+}
+
+.customer-name{
+font-size:18px;
+font-weight:bold;
+}
+
+.customer-info{
+color:#666;
+font-size:13px;
+margin-top:7px;
+}
+
+.card-actions{
+display:flex;
+gap:8px;
+margin-top:15px;
+}
+
+.card-actions button{
+flex:1;
+}
+
+.device-card{
+background:#f8fafc;
+padding:15px;
+border-radius:15px;
+margin-top:10px;
+border:1px solid #eee;
+}
+
+.device-title{
+font-weight:bold;
+font-size:16px;
+}
+
+.device-card.clickable{
+cursor:pointer;
+}
+
+.device-card.clickable:active{
+transform:scale(.98);
+}
+
+.back-btn{
+display:flex;
+align-items:center;
+gap:8px;
+margin-bottom:15px;
+cursor:pointer;
+font-weight:bold;
+}
+
+.badge{
+display:inline-block;
+padding:5px 9px;
+border-radius:8px;
+background:#e5e7eb;
+font-size:11px;
+margin-top:8px;
+}
+
+.db-ok{
+color:#16a34a;
+font-weight:bold;
+}
+
+.db-error{
+color:#dc2626;
+font-weight:bold;
+}
+
+.status-paid{
+background:#dcfce7;
+color:#166534;
+}
+
+.status-unpaid{
+background:#fee2e2;
+color:#991b1b;
+}
+
+.status-partial{
+background:#fef3c7;
+color:#92400e;
+}
+
+.repair-card{
+background:#fff;
+border:1px solid #eee;
+padding:15px;
+border-radius:16px;
+margin-top:12px;
+}
+
+.repair-title{
+font-weight:bold;
+font-size:16px;
+}
+
+.repair-price{
+font-size:17px;
+font-weight:bold;
+margin-top:10px;
+}
+
+.info-grid{
+display:grid;
+grid-template-columns:1fr 1fr;
+gap:10px;
+margin-top:15px;
+}
+
+.info-box{
+background:#f8fafc;
+padding:12px;
+border-radius:12px;
+}
+
+.info-label{
+font-size:11px;
+color:#777;
+}
+
+.info-value{
+font-size:14px;
+font-weight:bold;
+margin-top:4px;
+}
+
+.product-card-actions{
+display:flex;
+flex-direction:column;
+gap:10px;
+width:100%;
+}
+
+.product-card-actions button{
+width:100%;
+box-sizing:border-box;
+}
+
+.inventory-summary{
+display:grid;
+grid-template-columns:repeat(2,1fr);
+gap:10px;
+margin-top:15px;
+}
+
+.inventory-stat{
+background:#f8fafc;
+padding:14px;
+border-radius:14px;
+text-align:center;
+}
+
+.inventory-stat-title{
+font-size:12px;
+color:#777;
+}
+
+.inventory-stat-value{
+font-size:20px;
+font-weight:bold;
+margin-top:6px;
+}
+
+.product-card{
+background:white;
+border:1px solid #eee;
+padding:15px;
+border-radius:16px;
+margin-top:12px;
+}
+
+.product-title{
+font-size:17px;
+font-weight:bold;
+}
+
+.product-meta{
+font-size:13px;
+color:#666;
+margin-top:7px;
+}
+
+.stock-normal{
+color:#16a34a;
+font-weight:bold;
+}
+
+.stock-low{
+color:#dc2626;
+font-weight:bold;
+}
+
+.product-price{
+font-size:14px;
+font-weight:bold;
+margin-top:8px;
+}
+
+.product-actions{
+display:flex;
+gap:8px;
+margin-top:14px;
+}
+
+.product-actions button{
+flex:1;
+}
+
+.stock-badge{
+display:inline-block;
+padding:5px 9px;
+border-radius:8px;
+font-size:11px;
+margin-top:8px;
+}
+
+.stock-badge.normal{
+background:#dcfce7;
+color:#166534;
+}
+
+.stock-badge.low{
+background:#fee2e2;
+color:#991b1b;
+}
+
+/* لوگوی تنظیمات */
+.app-logo-preview-container{
+width:100%;
+min-height:120px;
+display:flex;
+justify-content:center;
+align-items:center;
+margin-top:15px;
+padding:15px;
+background:#f7f7f7;
+border:1px solid #ddd;
+border-radius:10px;
+box-sizing:border-box;
+overflow:hidden;
+}
+
+.app-logo-preview{
+display:block;
+width:auto;
+max-width:160px;
+max-height:120px;
+object-fit:contain;
+border-radius:8px;
+}
+
+.app-logo-empty-message{
+width:100%;
+margin-top:15px;
+padding:20px;
+text-align:center;
+color:#888;
+font-size:13px;
+background:#f7f7f7;
+border:1px dashed #ccc;
+border-radius:10px;
+box-sizing:border-box;
+}
+
+/* فاکتور چاپی فروش */
+.sales-print-preview{
+direction:rtl;
+width:100%;
+max-width:900px;
+margin:20px auto;
+background:#ffffff;
+color:#222;
+font-family:Tahoma,Arial,sans-serif;
+box-sizing:border-box;
+}
+
+.sales-print-invoice{
+width:100%;
+background:#ffffff;
+border:1px solid #d9d9d9;
+border-radius:12px;
+padding:24px;
+box-sizing:border-box;
+}
+
+.sales-print-header{
+display:flex;
+justify-content:space-between;
+align-items:flex-start;
+gap:20px;
+padding-bottom:20px;
+border-bottom:2px solid #222;
+box-sizing:border-box;
+}
+
+.sales-print-logo{
+width:72px;
+height:72px;
+flex-shrink:0;
+display:flex;
+justify-content:center;
+align-items:center;
+overflow:hidden;
+box-sizing:border-box;
+}
+
+.sales-print-logo img{
+display:block;
+width:100%;
+height:100%;
+max-width:72px;
+max-height:72px;
+object-fit:contain;
+border-radius:6px;
+}
+
+.sales-print-company{
+flex:1;
+min-width:0;
+}
+
+.sales-print-company-name{
+font-size:24px;
+font-weight:bold;
+margin-bottom:8px;
+}
+
+.sales-print-company-subtitle{
+font-size:14px;
+color:#555;
+line-height:1.8;
+}
+
+.sales-print-title-box{
+min-width:180px;
+text-align:center;
+border:2px solid #222;
+border-radius:8px;
+padding:12px 16px;
+box-sizing:border-box;
+}
+
+.sales-print-title{
+font-size:22px;
+font-weight:bold;
+margin-bottom:8px;
+}
+
+.sales-print-invoice-number{
+font-size:14px;
+}
+
+.sales-print-meta{
+display:grid;
+grid-template-columns:repeat(2,1fr);
+gap:10px 20px;
+margin-top:20px;
+padding:15px;
+background:#f7f7f7;
+border:1px solid #ddd;
+border-radius:8px;
+box-sizing:border-box;
+}
+
+.sales-print-meta-item{
+display:flex;
+gap:6px;
+font-size:14px;
+line-height:1.8;
+min-width:0;
+}
+
+.sales-print-meta-label{
+font-weight:bold;
+white-space:nowrap;
+}
+
+.sales-print-customer{
+margin-top:20px;
+padding:15px;
+border:1px solid #ddd;
+border-radius:8px;
+box-sizing:border-box;
+}
+
+.sales-print-section-title{
+font-size:16px;
+font-weight:bold;
+margin-bottom:12px;
+}
+
+.sales-print-customer-grid{
+display:grid;
+grid-template-columns:repeat(2,1fr);
+gap:8px 20px;
+}
+
+.sales-print-customer-item{
+font-size:14px;
+line-height:1.8;
+min-width:0;
+}
+
+.sales-print-label{
+font-weight:bold;
+}
+
+.sales-print-items{
+width:100%;
+margin-top:20px;
+overflow-x:auto;
+box-sizing:border-box;
+}
+
+.sales-print-items table{
+width:100%;
+border-collapse:collapse;
+min-width:600px;
+table-layout:auto;
+}
+
+.sales-print-items th,
+.sales-print-items td{
+border:1px solid #bbb;
+padding:10px 8px;
+text-align:center;
+font-size:13px;
+box-sizing:border-box;
+}
+
+.sales-print-items th{
+background:#eeeeee;
+font-weight:bold;
+}
+
+.sales-print-items td.item-name{
+text-align:right;
+}
+
+.sales-print-summary{
+width:100%;
+max-width:420px;
+margin-top:20px;
+margin-right:auto;
+box-sizing:border-box;
+}
+
+.sales-print-summary-row{
+display:flex;
+justify-content:space-between;
+align-items:center;
+gap:20px;
+padding:9px 12px;
+border-bottom:1px solid #ddd;
+font-size:14px;
+box-sizing:border-box;
+}
+
+.sales-print-summary-row:last-child{
+border-bottom:none;
+}
+
+.sales-print-summary-label{
+font-weight:bold;
+}
+
+.sales-print-summary-total{
+margin-top:5px;
+border:2px solid #222;
+border-radius:8px;
+font-size:17px;
+font-weight:bold;
+padding:12px;
+}
+
+.sales-print-payment-status{
+margin-top:15px;
+padding:10px 14px;
+border:1px solid #bbb;
+border-radius:8px;
+font-size:14px;
+text-align:center;
+font-weight:bold;
+box-sizing:border-box;
+}
+
+.sales-print-note{
+margin-top:20px;
+padding:15px;
+border:1px solid #ddd;
+border-radius:8px;
+min-height:60px;
+box-sizing:border-box;
+}
+
+.sales-print-note-title{
+font-weight:bold;
+margin-bottom:8px;
+}
+
+.sales-print-note-text{
+font-size:13px;
+line-height:2;
+white-space:pre-wrap;
+word-break:break-word;
+}
+
+.sales-print-footer{
+display:flex;
+justify-content:space-between;
+align-items:center;
+gap:30px;
+margin-top:35px;
+padding-top:20px;
+border-top:1px solid #aaa;
+box-sizing:border-box;
+}
+
+.sales-print-signature{
+width:200px;
+text-align:center;
+font-size:13px;
+line-height:2;
+flex-shrink:0;
+}
+
+.sales-print-thanks{
+flex:1;
+text-align:center;
+font-size:13px;
+color:#555;
+}
+
+.sales-print-no-print{
+display:block;
+}
+
+@media(min-width:700px){
+.stats{
+grid-template-columns:repeat(4,1fr);
+}
+
+.quick-actions{
+grid-template-columns:repeat(4,1fr);
+}
+
+.bottom-nav{
+left:50%;
+transform:translateX(-50%);
+max-width:700px;
+border:1px solid #ddd;
+border-radius:20px 20px 0 0;
+}
+
+.inventory-summary{
+grid-template-columns:repeat(4,1fr);
+}
+}
+
+@media print{
+
+@page{
+size:A4 portrait;
+margin:8mm;
+}
+
+html,
+body{
+width:100% !important;
+margin:0 !important;
+padding:0 !important;
+background:#ffffff !important;
+}
+
+body{
+overflow:visible !important;
+}
+
+body *{
+visibility:hidden;
+}
+
+.sales-print-preview,
+.sales-print-preview *{
+visibility:visible;
+}
+
+.sales-print-preview{
+position:absolute;
+top:0;
+right:0;
+left:0;
+width:100% !important;
+max-width:none !important;
+margin:0 !important;
+padding:0 !important;
+background:#ffffff !important;
+}
+
+.sales-print-invoice{
+width:100% !important;
+max-width:none !important;
+margin:0 !important;
+padding:0 !important;
+border:none !important;
+border-radius:0 !important;
+background:#ffffff !important;
+box-sizing:border-box;
+}
+
+.sales-print-no-print{
+display:none !important;
+visibility:hidden !important;
+}
+
+.sales-print-logo{
+width:48px !important;
+height:48px !important;
+flex-shrink:0 !important;
+overflow:hidden !important;
+}
+
+.sales-print-logo img{
+width:100% !important;
+height:100% !important;
+max-width:48px !important;
+max-height:48px !important;
+object-fit:contain !important;
+}
+
+.sales-print-header{
+padding-bottom:7px !important;
+gap:10px !important;
+border-bottom:1px solid #222 !important;
+page-break-inside:avoid;
+break-inside:avoid;
+}
+
+.sales-print-company-name{
+font-size:18px !important;
+margin-bottom:3px !important;
+}
+
+.sales-print-company-subtitle{
+font-size:9px !important;
+line-height:1.4 !important;
+}
+
+.sales-print-title-box{
+min-width:140px !important;
+padding:7px 10px !important;
+border:1px solid #222 !important;
+border-radius:5px !important;
+}
+
+.sales-print-title{
+font-size:17px !important;
+margin-bottom:3px !important;
+}
+
+.sales-print-invoice-number{
+font-size:9px !important;
+}
+
+.sales-print-meta{
+grid-template-columns:repeat(2,1fr) !important;
+gap:4px 15px !important;
+margin-top:7px !important;
+padding:6px 8px !important;
+background:#ffffff !important;
+border:1px solid #ccc !important;
+border-radius:4px !important;
+page-break-inside:avoid;
+break-inside:avoid;
+}
+
+.sales-print-meta-item{
+font-size:9px !important;
+line-height:1.4 !important;
+}
+
+.sales-print-customer{
+margin-top:7px !important;
+padding:7px 8px !important;
+border:1px solid #ccc !important;
+border-radius:4px !important;
+page-break-inside:avoid;
+break-inside:avoid;
+}
+
+.sales-print-section-title{
+font-size:11px !important;
+margin-bottom:4px !important;
+}
+
+.sales-print-customer-grid{
+grid-template-columns:repeat(2,1fr) !important;
+gap:3px 15px !important;
+}
+
+.sales-print-customer-item{
+font-size:9px !important;
+line-height:1.4 !important;
+}
+
+.sales-print-items{
+width:100% !important;
+margin-top:7px !important;
+overflow:visible !important;
+}
+
+.sales-print-items table{
+width:100% !important;
+min-width:0 !important;
+border-collapse:collapse !important;
+table-layout:fixed !important;
+}
+
+.sales-print-items th,
+.sales-print-items td{
+padding:4px 3px !important;
+font-size:8px !important;
+line-height:1.3 !important;
+border:1px solid #999 !important;
+word-break:break-word;
+page-break-inside:avoid;
+break-inside:avoid;
+}
+
+.sales-print-items th{
+background:#eeeeee !important;
+font-size:8px !important;
+}
+
+.sales-print-items thead{
+display:table-header-group;
+}
+
+.sales-print-items tr{
+page-break-inside:avoid;
+break-inside:avoid;
+}
+
+.sales-print-summary{
+width:100% !important;
+max-width:300px !important;
+margin-top:7px !important;
+margin-right:auto !important;
+page-break-inside:avoid;
+break-inside:avoid;
+}
+
+.sales-print-summary-row{
+padding:4px 7px !important;
+font-size:9px !important;
+line-height:1.3 !important;
+}
+
+.sales-print-summary-total{
+margin-top:3px !important;
+padding:6px 7px !important;
+border:1px solid #222 !important;
+border-radius:4px !important;
+font-size:11px !important;
+}
+
+.sales-print-payment-status{
+margin-top:6px !important;
+padding:5px 8px !important;
+border:1px solid #aaa !important;
+border-radius:4px !important;
+font-size:9px !important;
+page-break-inside:avoid;
+break-inside:avoid;
+}
+
+.sales-print-note{
+margin-top:7px !important;
+padding:7px 8px !important;
+min-height:0 !important;
+border:1px solid #ccc !important;
+border-radius:4px !important;
+page-break-inside:avoid;
+break-inside:avoid;
+}
+
+.sales-print-note-title{
+margin-bottom:3px !important;
+font-size:10px !important;
+}
+
+.sales-print-note-text{
+font-size:8px !important;
+line-height:1.4 !important;
+}
+
+.sales-print-footer{
+display:flex !important;
+justify-content:space-between !important;
+align-items:center !important;
+gap:15px !important;
+margin-top:10px !important;
+padding-top:7px !important;
+border-top:1px solid #aaa !important;
+page-break-inside:avoid;
+break-inside:avoid;
+}
+
+.sales-print-signature{
+width:130px !important;
+font-size:8px !important;
+line-height:1.4 !important;
+}
+
+.sales-print-thanks{
+font-size:8px !important;
+}
+
+}
+
+@media screen and (max-width:600px){
+
+.sales-print-preview{
+width:100%;
+max-width:100%;
+margin:10px auto;
+}
+
+.sales-print-invoice{
+padding:15px;
+border-radius:8px;
+}
+
+.sales-print-header{
+flex-direction:column;
+}
+
+.sales-print-title-box{
+width:100%;
+}
+
+.sales-print-meta{
+grid-template-columns:1fr;
+}
+
+.sales-print-customer-grid{
+grid-template-columns:1fr;
+}
+
+.sales-print-items{
+overflow-x:auto;
+}
+
+.sales-print-summary{
+max-width:none;
+}
+
+.sales-print-footer{
+flex-direction:column;
+}
+
+.sales-print-signature{
+width:100%;
+}
+
+.app-logo-preview{
+max-width:140px;
+max-height:100px;
+}
+
+.sales-print-logo{
+width:64px;
+height:64px;
+}
+
+.sales-print-logo img{
+max-width:64px;
+max-height:64px;
+}
+
+}
+
+</style>
+
+</head>
+
+<body>
+
+<header>
+
+<div class="header-top">
+
+<div>
+
+<div class="logo" style="display:flex;align-items:left;gap:220px;">
+    <img id="headerAppLogo" alt="" style="display:none;width:56px;height:56px;object-fit:contain;border-radius:6px;shrink:0;">
+    <span id="headerAppName">🔧 پکیج‌یار</span>
+</div>
+
+<div class="subtitle">
+سیستم مدیریت تعمیرکار پکیج
+</div>
+
+</div>
+
+<div style="font-size:28px">
+🔥
+</div>
+
+</div>
+
+<div class="today">
+
+امروز:
+
+<strong id="todayDate">
+در حال بارگذاری...
+</strong>
+
+</div>
+
+</header>
+
+<main class="container">
+
+<section id="dashboardPage" class="page active">
+
+<div class="section-title">
+خلاصه وضعیت
+</div>
+
+<div class="stats">
+
+<div class="stat-card">
+<div class="stat-icon">👤</div>
+<div class="stat-title">مشتریان</div>
+<div class="stat-number" id="customerCount">0</div>
+</div>
+
+<div class="stat-card">
+<div class="stat-icon">🔥</div>
+<div class="stat-title">دستگاه‌ها</div>
+<div class="stat-number" id="deviceCount">0</div>
+</div>
+
+<div class="stat-card">
+<div class="stat-icon">🔧</div>
+<div class="stat-title">تعمیرات</div>
+<div class="stat-number" id="repairCount">0</div>
+</div>
+
+<div class="stat-card">
+<div class="stat-icon">📦</div>
+<div class="stat-title">کالاها</div>
+<div class="stat-number" id="productCount">0</div>
+</div>
+
+</div>
+
+<div class="section-title" style="margin-top:30px">
+دسترسی سریع
+</div>
+
+<div class="quick-actions">
+
+<div class="action" onclick="openCustomerModal()">
+<div class="action-icon">👤</div>
+<div class="action-title">مشتری جدید</div>
+</div>
+
+<div class="action" onclick="showPage('customersPage')">
+<div class="action-icon">👥</div>
+<div class="action-title">مشتریان</div>
+</div>
+
+<div class="action" onclick="startNewRepair()">
+<div class="action-icon">🔧</div>
+<div class="action-title">ثبت تعمیر</div>
+</div>
+
+<div class="action" onclick="showPage('inventoryPage')">
+<div class="action-icon">📦</div>
+<div class="action-title">انبار</div>
+</div>
+
+</div>
+
+</section>
+
+<section id="customersPage" class="page">
+
+<div class="section-title">
+👤 مشتریان
+</div>
+
+<button class="primary-btn" onclick="openCustomerModal()">
++ مشتری جدید
+</button>
+
+<div class="search-box" style="margin-top:15px">
+
+<span class="search-icon">🔍</span>
+
+<input
+id="customerSearch"
+type="search"
+placeholder="جستجوی نام یا شماره..."
+autocomplete="off">
+
+</div>
+
+<div id="customersList"></div>
+
+</section>
+
+<section id="customerProfilePage" class="page">
+
+<div class="back-btn"
+onclick="showPage('customersPage')">
+
+← بازگشت به مشتریان
+
+</div>
+
+<div id="customerProfile"></div>
+
+</section>
+
+<section id="deviceProfilePage" class="page">
+
+<div class="back-btn"
+onclick="openCustomerProfile(currentCustomerId)">
+
+← بازگشت به کارت مشتری
+
+</div>
+
+<div id="deviceProfile"></div>
+
+</section>
+
+<section id="repairsPage" class="page">
+
+<div class="section-title">
+🔧 سوابق تعمیرات
+</div>
+
+<button
+class="primary-btn"
+onclick="startNewRepair()">
+
++ ثبت تعمیر جدید
+
+</button>
+
+<div class="search-box"
+style="margin-top:15px">
+
+<span class="search-icon">
+🔍
+</span>
+
+<input
+id="repairHistorySearch"
+type="search"
+placeholder="جستجوی مشتری، دستگاه، شماره تماس یا تاریخ..."
+autocomplete="off">
+
+</div>
+
+<div id="repairsHistoryList"></div>
+
+</section>
+
+<section id="inventoryPage" class="page">
+
+<div class="section-title">
+📦 انبار
+</div>
+
+<div class="card">
+
+<div class="inventory-summary">
+
+<div class="inventory-stat">
+
+<div class="inventory-stat-title">
+تعداد کالاها
+</div>
+
+<div class="inventory-stat-value"
+id="inventoryProductCount">
+0
+</div>
+
+</div>
+
+<div class="inventory-stat">
+
+<div class="inventory-stat-title">
+مجموع موجودی
+</div>
+
+<div class="inventory-stat-value"
+id="inventoryTotalStock">
+0
+</div>
+
+</div>
+
+</div>
+
+<div style="margin-top:15px">
+
+<button
+class="primary-btn"
+onclick="openProductModal()">
+
++ کالای جدید
+
+</button>
+
+</div>
+
+</div>
+
+<div class="search-box">
+
+<span class="search-icon">
+🔍
+</span>
+
+<input
+id="productSearch"
+type="search"
+placeholder="جستجوی نام کالا یا کد کالا..."
+autocomplete="off">
+
+</div>
+
+<div id="productsList"></div>
+
+</section>
+
+<section id="settingsPage" class="page">
+
+<div class="section-title">
+⚙️ تنظیمات
+</div>
+
+<div class="card">
+
+<h3>
+پکیج‌یار
+</h3>
+
+<p style="color:#777">
+نسخه ۰.۵
+</p>
+
+<hr>
+
+<p>
+💾 وضعیت دیتابیس:
+<span id="dbStatus">
+در حال بررسی...
+</span>
+</p>
+
+<p>
+📁 نام دیتابیس:
+<span id="dbName">
+-
+</span>
+</p>
+
+<p>
+🔢 نسخه دیتابیس:
+<span id="dbVersion">
+-
+</span>
+</p>
+
+</div>
+
+</section>
+
+</main>
+
+<nav class="bottom-nav">
+
+<div class="nav-item active"
+onclick="showPage('dashboardPage',this)">
+
+<div class="nav-icon">🏠</div>
+
+خانه
+
+</div>
+
+<div class="nav-item"
+onclick="showPage('customersPage',this)">
+
+<div class="nav-icon">👤</div>
+
+مشتریان
+
+</div>
+
+<div class="nav-item"
+onclick="showPage('repairsPage',this)">
+
+<div class="nav-icon">🔧</div>
+
+تعمیرات
+
+</div>
+
+<div class="nav-item"
+onclick="showPage('inventoryPage',this)">
+
+<div class="nav-icon">📦</div>
+
+انبار
+
+</div>
+
+<div class="nav-item"
+onclick="showPage('settingsPage',this)">
+
+<div class="nav-icon">⚙️</div>
+
+تنظیمات
+
+</div>
+
+</nav>
+
+<div id="customerModal" class="modal">
+
+<div class="modal-content">
+
+<div class="modal-header">
+
+<h3 id="customerModalTitle">
+مشتری جدید
+</h3>
+
+<div class="close"
+onclick="closeCustomerModal()">
+×
+</div>
+
+</div>
+
+<label>
+نام و نام خانوادگی
+</label>
+
+<input
+id="customerName"
+type="text"
+placeholder="مثلاً علی احمدی"
+autocomplete="name">
+
+<label>
+شماره موبایل
+</label>
+
+<input
+id="customerPhone"
+type="tel"
+placeholder="0912..."
+autocomplete="tel"
+inputmode="tel">
+
+<label>
+آدرس
+</label>
+
+<input
+id="customerAddress"
+type="text"
+placeholder="آدرس مشتری"
+autocomplete="street-address">
+
+<label>
+توضیحات
+</label>
+
+<textarea
+id="customerNote"
+placeholder="توضیحات مشتری"></textarea>
+
+<button
+class="primary-btn"
+style="width:100%"
+onclick="saveCustomer()">
+
+ذخیره مشتری
+
+</button>
+
+</div>
+
+</div>
+
+<div id="deviceModal" class="modal">
+
+<div class="modal-content">
+
+<div class="modal-header">
+
+<h3 id="deviceModalTitle">
+دستگاه جدید
+</h3>
+
+<div class="close"
+onclick="closeDeviceModal()">
+×
+</div>
+
+</div>
+
+<label>
+برند دستگاه
+</label>
+
+<input
+id="deviceBrand"
+type="text"
+placeholder="مثلاً بوتان">
+
+<label>
+مدل دستگاه
+</label>
+
+<input
+id="deviceModel"
+type="text"
+placeholder="مثلاً Perla Pro 24RSi">
+
+<label>
+نوع دستگاه
+</label>
+
+<input
+id="deviceType"
+type="text"
+placeholder="مثلاً پکیج دیواری">
+
+<label>
+شماره سریال
+</label>
+
+<input
+id="deviceSerial"
+type="text"
+placeholder="در صورت وجود">
+
+<label>
+توضیحات
+</label>
+
+<textarea
+id="deviceNote"
+placeholder="توضیحات دستگاه"></textarea>
+
+<button
+class="primary-btn"
+style="width:100%"
+onclick="saveDevice()">
+
+ذخیره دستگاه
+
+</button>
+
+</div>
+
+</div>
+
+<div id="repairModal" class="modal">
+<div class="modal-content">
+
+<div class="modal-header">
+<h3 id="repairModalTitle">ثبت سرویس و تعمیر</h3>
+<div class="close" onclick="closeRepairModal()">×</div>
+</div>
+
+<label>تاریخ تعمیر</label>
+<input id="repairDate" type="text" readonly>
+
+<label>نوع فعالیت</label>
+<select id="repairType">
+<option value="تعمیر">تعمیر</option>
+<option value="سرویس">سرویس</option>
+<option value="عیب‌یابی">عیب‌یابی</option>
+<option value="نصب">نصب</option>
+</select>
+
+<label>شرح ایراد / درخواست مشتری</label>
+<textarea id="repairProblem" placeholder="مثلاً پکیج ارور E01 می‌دهد"></textarea>
+
+<label>اقدامات انجام‌شده</label>
+<textarea id="repairAction" placeholder="مثلاً بررسی سنسور، هواگیری، تعویض قطعه..."></textarea>
+
+<!-- ====== قطعات مصرفی از انبار ====== -->
+<div class="section-title" style="margin-top:20px; font-size:16px;">
+🔩 قطعات مصرف‌شده از انبار
+</div>
+
+<label>انتخاب قطعه از انبار</label>
+<select id="repairProductSelect">
+<option value="">انتخاب قطعه</option>
+</select>
+
+<label>تعداد</label>
+<input id="repairProductQuantity" type="number" inputmode="numeric" min="1" step="1" placeholder="تعداد">
+
+<label>قیمت واحد (قابل تغییر)</label>
+<input id="repairProductUnitPrice" type="number" inputmode="numeric" min="0" step="1" placeholder="قیمت">
+
+<button type="button" class="primary-btn" style="width:100%; margin-top:8px;" onclick="addRepairPart()">
+➕ افزودن قطعه به تعمیر
+</button>
+
+<div id="repairPartsContainer" style="margin-top:15px;"></div>
+
+<div id="repairPartsTotal" class="info-box" style="margin-top:10px; margin-bottom:15px;">
+مجموع هزینه قطعات: ۰ تومان
+</div>
+<!-- ====== پایان قطعات ====== -->
+
+<label>اجرت تعمیر / سرویس</label>
+<input id="repairLaborCost" type="number" inputmode="numeric" placeholder="۰">
+
+<label>وضعیت پرداخت</label>
+<select id="repairPaymentStatus">
+<option value="پرداخت کامل">پرداخت کامل</option>
+<option value="پرداخت ناقص">پرداخت ناقص</option>
+<option value="پرداخت نشده">پرداخت نشده</option>
+</select>
+
+<label>مبلغ پرداخت‌شده</label>
+<input id="repairPaid" type="number" inputmode="numeric" placeholder="۰">
+
+<label>توضیحات</label>
+<textarea id="repairNote" placeholder="توضیحات تکمیلی"></textarea>
+
+<button class="primary-btn" style="width:100%" onclick="saveRepair()">
+ذخیره تعمیر
+</button>
+
+</div>
+</div>
+
+<div id="productModal" class="modal">
+
+<div class="modal-content">
+
+<div class="modal-header">
+
+<h3 id="productModalTitle">
+کالای جدید
+</h3>
+
+<div class="close"
+onclick="closeProductModal()">
+×
+</div>
+
+</div>
+
+<label>
+نام کالا / قطعه
+</label>
+
+<input
+id="productName"
+type="text"
+placeholder="مثلاً شیر پرکن بوتان"
+autocomplete="off">
+
+<label>
+کد کالا
+</label>
+
+<input
+id="productCode"
+type="text"
+placeholder="مثلاً BP-001"
+autocomplete="off">
+
+<label>
+دسته‌بندی
+</label>
+
+<input
+id="productCategory"
+type="text"
+placeholder="مثلاً قطعات پکیج"
+autocomplete="off">
+
+<label>
+واحد
+</label>
+
+<select id="productUnit">
+
+<option value="عدد">
+عدد
+</option>
+
+<option value="دستگاه">
+دستگاه
+</option>
+
+<option value="متر">
+متر
+</option>
+
+<option value="کیلوگرم">
+کیلوگرم
+</option>
+
+<option value="لیتر">
+لیتر
+</option>
+
+<option value="بسته">
+بسته
+</option>
+
+<option value="سایر">
+سایر
+</option>
+
+</select>
+
+<label>
+قیمت خرید پیش‌فرض
+</label>
+
+<input
+id="productPurchasePrice"
+type="number"
+inputmode="numeric"
+placeholder="۰">
+
+<label>
+قیمت فروش پیش‌فرض
+</label>
+
+<input
+id="productSalePrice"
+type="number"
+inputmode="numeric"
+placeholder="۰">
+
+<label>
+حداقل موجودی
+</label>
+
+<input
+id="productMinStock"
+type="number"
+inputmode="numeric"
+placeholder="۰">
+
+<label>
+توضیحات
+</label>
+
+<textarea
+id="productNote"
+placeholder="توضیحات کالا"></textarea>
+
+<button
+class="primary-btn"
+style="width:100%"
+onclick="saveProduct()">
+
+ذخیره کالا
+
+</button>
+
+</div>
+
+</div>
+
 <script src="js/utils/dates.js"></script>
 <script src="js/utils/formatter.js"></script>
 <script src="js/utils/helpers.js"></script>
@@ -27,3 +1959,6 @@
 <script src="js/core/app.js"></script>
 <script src="js/pwa/register.js"></script>
 <script src="js/pwa/update.js"></script>
+</body>
+
+</html>
