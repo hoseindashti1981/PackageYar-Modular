@@ -136,4 +136,29 @@ function readImageFileAsDataURL(file){
     });
 }
 
+function getAllProductsForPurchase(){
 
+    return new Promise(function(resolve, reject){
+
+        if(!db){
+            reject(new Error("دیتابیس آماده نیست."));
+            return;
+        }
+
+        if(!db.objectStoreNames.contains("products")){
+            resolve([]);
+            return;
+        }
+
+        const tx = db.transaction("products", "readonly");
+        const req = tx.objectStore("products").getAll();
+
+        req.onsuccess = function(){
+            resolve(req.result || []);
+        };
+
+        req.onerror = function(){
+            reject(new Error("خواندن کالاها از انبار انجام نشد."));
+        };
+    });
+}
