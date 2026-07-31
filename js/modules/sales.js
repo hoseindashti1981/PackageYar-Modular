@@ -1430,3 +1430,198 @@ function openQuickCustomerForSales(){
         alert("ثبت مشتری جدید انجام نشد.");
     };
 }
+function addSalesInvoiceItem(){
+
+    const select = document.getElementById("salesProductSelect");
+    const quantityInput = document.getElementById("salesProductQuantity");
+    const priceInput = document.getElementById("salesProductUnitPrice");
+
+    if(!select || !quantityInput || !priceInput){
+        return;
+    }
+
+    const productId = Number(select.value);
+    const quantity = Number(quantityInput.value);
+    const unitPrice = Number(priceInput.value);
+
+    if(!Number.isInteger(productId) || productId <= 0){
+        alert("لطفاً کالا را انتخاب کنید.");
+        return;
+    }
+
+    if(!Number.isInteger(quantity) || quantity <= 0){
+        alert("تعداد نامعتبر است.");
+        return;
+    }
+
+    if(!Number.isFinite(unitPrice) || unitPrice < 0){
+        alert("قیمت فروش نامعتبر است.");
+        return;
+    }
+
+    const option = select.options[select.selectedIndex];
+    const stock = Number(option?.dataset?.stock || 0);
+
+    if(stock < quantity){
+        alert(
+            "موجودی کافی نیست.\n" +
+            "موجودی: " + stock.toLocaleString("fa-IR") + "\n" +
+            "درخواستی: " + quantity.toLocaleString("fa-IR")
+        );
+        return;
+    }
+
+    const productName = (option ? option.textContent : "کالا").split("|")[0].trim();
+
+    const existing = currentSalesInvoiceItems.find(function(item){
+        return Number(item.productId) === productId && item.fromRepair !== true;
+    });
+
+    if(existing){
+        existing.quantity = Number(existing.quantity) + quantity;
+        existing.unitPrice = unitPrice;
+        existing.total = existing.quantity * existing.unitPrice;
+    }else{
+        currentSalesInvoiceItems.push({
+            productId: productId,
+            productName: productName,
+            quantity: quantity,
+            unitPrice: unitPrice,
+            total: quantity * unitPrice,
+            fromRepair: false
+        });
+    }
+
+    select.value = "";
+    quantityInput.value = "";
+    priceInput.value = "";
+
+    renderSalesInvoiceItems();
+}
+
+
+function removeSalesInvoiceItem(index){
+
+    if(
+        !Array.isArray(currentSalesInvoiceItems) ||
+        index < 0 ||
+        index >= currentSalesInvoiceItems.length
+    ){
+        return;
+    }
+
+    currentSalesInvoiceItems.splice(index, 1);
+    renderSalesInvoiceItems();
+}
+
+
+function renderSalesInvoiceItems(){
+
+    const container = document.getElementById("salesInvoiceItemsContainer");
+
+    if(!container){
+        return;
+    }
+
+    if(!Array.isArray(currentSalesInvoiceItems) || currentSalesInvoiceItems.length === 0){
+        container.innerHTML = `
+            <div class="card">
+                <div class="empty">هنوز کالایی به فاکتور اضافه نشده است.</div>
+            </div>
+        `;
+        updateSalesInvoiceTotal();
+        return;
+    }
+
+    let html = "";
+
+    currentSalesInvoiceItems.forEach(function(item, index){
+
+        const total = Number(item.quantity) * Number(item.unitPrice);
+        item.total = total;
+
+        html += `
+            <div class="product-card">
+                <div class="product-title">
+                    📦 ${escapeHTML(item.productName || "بدون نام")}
+                    ${item.fromRepair ? " <span class=\"badge\">از تعمیر</span>" : ""}
+                </div>
+                <div class="product-meta">
+                    تعداد: ${Number(item.quantity).toLocaleString("fa-IR")}
+                </div>
+                <div class="product-meta">
+                    قیمت واحد: ${formatMoney(item.unitPrice)}
+                </div>
+                <div class="product-price">
+                    جمع: ${formatMoney(total)}
+                </div>
+                <div class="product-actions">
+                    <button class="danger-btn" onclick="removeSalesInvoiceItem(${index})">
+                        حذف
+                    </button>
+                </div>
+            </div>
+        `;
+    });
+
+    container.innerHTML = html;
+    updateSalesInvoiceTotal();
+}
+
+
+function updateSalesInvoiceTotal(){
+
+    const totalElement = document.getElementById("salesInvoiceTotal");
+    if(!totalElement){
+        return;
+    }
+
+    let itemsTotal = 0;
+
+    if(Array.isArray(currentSalesInvoiceItems)){
+        currentSalesInvoiceItems.forEach(function(item){
+            itemsTotal += Number(item.quantity || 0) * Number(item.unitPrice || 0);
+        });
+    }
+
+    const laborCost = Number(document.getElementById("salesLaborCost")?.value) || 0;
+    const total = itemsTotal + laborCost;
+
+    totalElement.innerHTML = "مبلغ کل: " + formatMoney(total);
+
+    updateSalesPaidAmount();
+}
+
+
+function updateSalesPaidAmount(){
+
+    const statusSelect = document.getElementById("salesPaymentStatus");
+    const paidInput = document.getElementById("salesPaidAmount");
+    const laborInput = document.getElementById("salesLaborCost");
+
+    if(!statusSelect || !paidInput){
+        return;
+    }
+
+    let itemsTotal = 0;
+
+    if(Array.isArray(currentSalesInvoiceItems)){
+        currentSalesInvoiceItems.forEach(function(item){
+            itemsTotal += Number(item.quantity || 0) * Number(item.unitPrice || 0);
+        });
+    }
+
+    const laborCost = Number(laborInput?.value) || 0;
+    const total = itemsTotal + laborCost;
+    const status = statusSelect.value;
+
+    if(status === "پرداخت کامل"){
+        paidInput.value = total;
+        paidInput.readOnly = true;
+    }else if(status === "پرداخت نشده"){
+        paidInput.value = 0;
+        paidInput.readOnly = true;
+    }else{
+        paidInput.readOnly = false;
+    }
+}
