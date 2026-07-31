@@ -3106,4 +3106,113 @@ function updatePurchaseInvoiceTotal(){
     `;
 
 }
+function addPurchaseInvoiceItem(){
 
+    const select = document.getElementById("purchaseProductSelect");
+    const quantityInput = document.getElementById("purchaseProductQuantity");
+    const priceInput = document.getElementById("purchaseProductUnitPrice");
+
+    if(!select || !quantityInput || !priceInput){
+        return;
+    }
+
+    const productId = Number(select.value);
+    const quantity = Number(quantityInput.value);
+    const unitPrice = Number(priceInput.value);
+
+    if(!Number.isInteger(productId) || productId <= 0){
+        alert("لطفاً کالا را انتخاب کنید.");
+        return;
+    }
+
+    if(!Number.isInteger(quantity) || quantity <= 0){
+        alert("تعداد نامعتبر است.");
+        return;
+    }
+
+    if(!Number.isFinite(unitPrice) || unitPrice < 0){
+        alert("قیمت خرید نامعتبر است.");
+        return;
+    }
+
+    const option = select.options[select.selectedIndex];
+    const productName = (option ? option.textContent : "کالا").split("|")[0].trim();
+
+    // اگر کالا قبلاً در فاکتور بود، تعداد را جمع کن
+    const existing = currentPurchaseInvoiceItems.find(function(item){
+        return Number(item.productId) === productId;
+    });
+
+    if(existing){
+        existing.quantity = Number(existing.quantity) + quantity;
+        existing.unitPrice = unitPrice;
+        existing.total = existing.quantity * existing.unitPrice;
+    }else{
+        currentPurchaseInvoiceItems.push({
+            productId: productId,
+            productName: productName,
+            quantity: quantity,
+            unitPrice: unitPrice,
+            total: quantity * unitPrice
+        });
+    }
+
+    select.value = "";
+    quantityInput.value = "";
+    priceInput.value = "";
+
+    renderPurchaseInvoiceItems();
+}
+
+
+function renderPurchaseInvoiceItems(){
+
+    const container = document.getElementById("purchaseInvoiceItemsContainer");
+
+    if(!container){
+        return;
+    }
+
+    if(!Array.isArray(currentPurchaseInvoiceItems) || currentPurchaseInvoiceItems.length === 0){
+        container.innerHTML = `
+            <div class="card">
+                <div class="empty">هنوز کالایی به فاکتور اضافه نشده است.</div>
+            </div>
+        `;
+        updatePurchaseInvoiceTotal();
+        return;
+    }
+
+    let html = "";
+
+    currentPurchaseInvoiceItems.forEach(function(item, index){
+
+        const total = Number(item.quantity) * Number(item.unitPrice);
+        item.total = total;
+
+        html += `
+            <div class="product-card">
+                <div class="product-title">
+                    📦 ${escapeHTML(item.productName || "بدون نام")}
+                </div>
+                <div class="product-meta">
+                    تعداد: ${Number(item.quantity).toLocaleString("fa-IR")}
+                </div>
+                <div class="product-meta">
+                    قیمت واحد: ${formatMoney(item.unitPrice)}
+                </div>
+                <div class="product-price">
+                    جمع: ${formatMoney(total)}
+                </div>
+                <div class="product-actions">
+                    <button class="danger-btn" onclick="removePurchaseInvoiceItem(${index})">
+                        حذف
+                    </button>
+                </div>
+            </div>
+        `;
+    });
+
+    container.innerHTML = html;
+    updatePurchaseInvoiceTotal();
+}
