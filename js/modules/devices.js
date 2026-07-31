@@ -3,12 +3,6 @@
 function openDeviceModal(
 device
 ){
-
-let editingDeviceId =
-null;
-let currentDeviceId =
-null; 
-
 if(
 !currentCustomerId
 ){
