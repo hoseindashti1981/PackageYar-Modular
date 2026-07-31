@@ -1,18 +1,7 @@
 
 
-function openProductModal(
-product
-){
-
-let editingProductId =
-null;
-
-editingProductId =
-product
-?
-product.id
-:
-null;
+function openProductModal(product){
+    editingProductId = product ? product.id : null;
 
 document
 .getElementById(
