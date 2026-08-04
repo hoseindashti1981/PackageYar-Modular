@@ -1546,16 +1546,38 @@ function renderSalesInvoiceItems(){
                     📦 ${escapeHTML(item.productName || "بدون نام")}
                     ${item.fromRepair ? " <span class=\"badge\">از تعمیر</span>" : ""}
                 </div>
-                <div class="product-meta">
-                    تعداد: ${Number(item.quantity).toLocaleString("fa-IR")}
+
+                <div class="form-group" style="margin-top:12px;margin-bottom:8px;">
+                    <label>تعداد</label>
+                    <input
+                        type="number"
+                        min="1"
+                        step="1"
+                        inputmode="numeric"
+                        value="${Number(item.quantity) || 1}"
+                        onchange="updateSalesItemQuantity(${index}, this.value)"
+                        oninput="updateSalesItemQuantity(${index}, this.value)"
+                    >
                 </div>
-                <div class="product-meta">
-                    قیمت واحد: ${formatMoney(item.unitPrice)}
+
+                <div class="form-group" style="margin-bottom:8px;">
+                    <label>قیمت واحد</label>
+                    <input
+                        type="number"
+                        min="0"
+                        step="1"
+                        inputmode="numeric"
+                        value="${Number(item.unitPrice) || 0}"
+                        onchange="updateSalesItemUnitPrice(${index}, this.value)"
+                        oninput="updateSalesItemUnitPrice(${index}, this.value)"
+                    >
                 </div>
+
                 <div class="product-price">
                     جمع: ${formatMoney(total)}
                 </div>
-                <div class="product-actions">
+
+                <div class="product-actions" style="margin-top:12px;">
                     <button class="danger-btn" onclick="removeSalesInvoiceItem(${index})">
                         حذف
                     </button>
@@ -1567,7 +1589,6 @@ function renderSalesInvoiceItems(){
     container.innerHTML = html;
     updateSalesInvoiceTotal();
 }
-
 
 function updateSalesInvoiceTotal(){
 
