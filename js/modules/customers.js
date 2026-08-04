@@ -702,7 +702,48 @@ style="margin-top:15px">
 </div>
 
 `;
+// محاسبه و نمایش مانده در پروفایل
+(async function(){
+    try{
+        const cid = Number(customer.id);
+        let balance = 0;
 
+        const repairs = await new Promise(function(resolve){
+            if(!db.objectStoreNames.contains("repairs")){ resolve([]); return; }
+            const tx = db.transaction("repairs", "readonly");
+            const req = tx.objectStore("repairs").getAll();
+            req.onsuccess = function(){ resolve(req.result || []); };
+            req.onerror = function(){ resolve([]); };
+        });
+
+        const sales = await new Promise(function(resolve){
+            if(!db.objectStoreNames.contains("salesInvoices")){ resolve([]); return; }
+            const tx = db.transaction("salesInvoices", "readonly");
+            const req = tx.objectStore("salesInvoices").getAll();
+            req.onsuccess = function(){ resolve(req.result || []); };
+            req.onerror = function(){ resolve([]); };
+        });
+
+        repairs.forEach(function(r){
+            if(Number(r.customerId) !== cid) return;
+            balance += Math.max(0, Number(r.totalCost || 0) - Number(r.paidAmount || 0));
+        });
+
+        sales.forEach(function(s){
+            if(Number(s.customerId) !== cid) return;
+            balance += Math.max(0, Number(s.totalAmount || 0) - Number(s.paidAmount || 0));
+        });
+
+        const el = document.getElementById("customerProfileBalance");
+        if(el){
+            el.style.color = balance > 0 ? "#dc2626" : "#16a34a";
+            el.innerHTML = "💰 مانده حساب: " + formatMoney(balance);
+        }
+    }catch(e){
+        console.error(e);
+    }
+})();
+    
 const devicesList =
 document.getElementById(
 "devicesList"
