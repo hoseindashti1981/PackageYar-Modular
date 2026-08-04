@@ -2,7 +2,7 @@ const DB_NAME =
 "PackageYarDB";
 const DB_VERSION =
 3;
-db = event.target.result;
+
 function setDatabaseStatus(
 text,
 className
