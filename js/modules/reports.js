@@ -11,7 +11,7 @@ async function openReportsPage(){
     if(!page) return;
 
     page.innerHTML = `
-        <div class="back-btn" onclick="loadSettingsPage()">
+        <div class="back-btn" onclick="renderSettingsPage()">
             ← بازگشت به تنظیمات
         </div>
 
