@@ -113,6 +113,26 @@ async function renderSettingsPage(){
         </button>
     </div>
 
+     <!-- =====================================================
+                         گزارش گیری
+      ===================================================== -->
+
+
+<div class="card">
+    <div style="font-weight:bold;margin-bottom:10px;">📊 گزارش‌ها</div>
+    <p style="color:#666;font-size:13px;line-height:1.8;margin-bottom:12px;">
+        خلاصه فروش، تعمیرات، مانده مشتریان و قطعات پرمصرف.
+    </p>
+    <button
+        class="primary-btn"
+        style="width:100%;"
+        onclick="openReportsPage()"
+    >
+        مشاهده گزارش‌ها
+    </button>
+</div>
+
+
 
     <!-- =====================================================
          لوگوی کسب و کار
