@@ -1622,6 +1622,14 @@ function updateSalesPaidAmount(){
         paidInput.value = 0;
         paidInput.readOnly = true;
     }else{
+        // پرداخت ناقص — مقدار فعلی را حفظ کن و فقط قابل ویرایش بگذار
         paidInput.readOnly = false;
+
+        const currentPaid = Number(paidInput.value) || 0;
+
+        // اگر مبلغ پرداختی از کل بیشتر شده، به کل محدود کن
+        if(currentPaid > total){
+            paidInput.value = total;
+        }
     }
 }
