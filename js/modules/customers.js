@@ -663,6 +663,10 @@ customer.createdDate ||
 
 </div>
 
+<div class="customer-info" id="customerProfileBalance" style="margin-top:10px;font-weight:bold;">
+    💰 در حال محاسبه مانده...
+</div>
+
 <div class="card-actions">
 
 <button
