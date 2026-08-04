@@ -6,8 +6,8 @@ async function openPurchaseInvoiceForm(){
     }
 
     // همیشه برای فاکتور جدید، حالت ویرایش را پاک کن
-    let editingPurchaseInvoiceId = null;
-    let currentPurchaseInvoiceItems = [];
+     editingPurchaseInvoiceId = null;
+     currentPurchaseInvoiceItems = [];
 
     try{
         const products = await getAllProductsForPurchase();
@@ -3058,6 +3058,56 @@ function removePurchaseInvoiceItem(
 
 }
 
+
+function applyPurchaseItemFieldChange(input){
+
+    if(!input) return;
+
+    const index = Number(input.dataset.index);
+    const field = input.dataset.field;
+    const raw = input.value;
+
+    if(
+        !Array.isArray(currentPurchaseInvoiceItems) ||
+        index < 0 ||
+        index >= currentPurchaseInvoiceItems.length
+    ){
+        return;
+    }
+
+    if(field === "quantity"){
+        const qty = Number(raw);
+        if(!Number.isInteger(qty) || qty <= 0){
+            input.value = currentPurchaseInvoiceItems[index].quantity;
+            return;
+        }
+        currentPurchaseInvoiceItems[index].quantity = qty;
+    }
+
+    if(field === "unitPrice"){
+        const price = Number(raw);
+        if(!Number.isFinite(price) || price < 0){
+            input.value = currentPurchaseInvoiceItems[index].unitPrice;
+            return;
+        }
+        currentPurchaseInvoiceItems[index].unitPrice = price;
+    }
+
+    const item = currentPurchaseInvoiceItems[index];
+    item.total = Number(item.quantity) * Number(item.unitPrice);
+
+    const card = input.closest(".product-card");
+    if(card){
+        const priceEl = card.querySelector(".product-price");
+        if(priceEl){
+            priceEl.innerHTML = "جمع: " + formatMoney(item.total);
+        }
+    }
+
+    updatePurchaseInvoiceTotal();
+}
+
+
 function updatePurchaseInvoiceTotal(){
 
     const totalElement =
@@ -3168,10 +3218,7 @@ function addPurchaseInvoiceItem(){
 function renderPurchaseInvoiceItems(){
 
     const container = document.getElementById("purchaseInvoiceItemsContainer");
-
-    if(!container){
-        return;
-    }
+    if(!container) return;
 
     if(!Array.isArray(currentPurchaseInvoiceItems) || currentPurchaseInvoiceItems.length === 0){
         container.innerHTML = `
@@ -3186,26 +3233,49 @@ function renderPurchaseInvoiceItems(){
     let html = "";
 
     currentPurchaseInvoiceItems.forEach(function(item, index){
-
-        const total = Number(item.quantity) * Number(item.unitPrice);
+        const qty = Number(item.quantity) || 1;
+        const price = Number(item.unitPrice) || 0;
+        const total = qty * price;
         item.total = total;
 
         html += `
-            <div class="product-card">
+            <div class="product-card" data-index="${index}">
                 <div class="product-title">
                     📦 ${escapeHTML(item.productName || "بدون نام")}
                 </div>
-                <div class="product-meta">
-                    تعداد: ${Number(item.quantity).toLocaleString("fa-IR")}
+
+                <div class="form-group" style="margin-top:12px;margin-bottom:8px;">
+                    <label>تعداد</label>
+                    <input
+                        type="number"
+                        min="1"
+                        step="1"
+                        inputmode="numeric"
+                        value="${qty}"
+                        data-field="quantity"
+                        data-index="${index}"
+                    >
                 </div>
-                <div class="product-meta">
-                    قیمت واحد: ${formatMoney(item.unitPrice)}
+
+                <div class="form-group" style="margin-bottom:8px;">
+                    <label>قیمت واحد</label>
+                    <input
+                        type="number"
+                        min="0"
+                        step="1"
+                        inputmode="numeric"
+                        value="${price}"
+                        data-field="unitPrice"
+                        data-index="${index}"
+                    >
                 </div>
+
                 <div class="product-price">
                     جمع: ${formatMoney(total)}
                 </div>
-                <div class="product-actions">
-                    <button class="danger-btn" onclick="removePurchaseInvoiceItem(${index})">
+
+                <div class="product-actions" style="margin-top:12px;">
+                    <button type="button" class="danger-btn" onclick="removePurchaseInvoiceItem(${index})">
                         حذف
                     </button>
                 </div>
@@ -3214,5 +3284,15 @@ function renderPurchaseInvoiceItems(){
     });
 
     container.innerHTML = html;
+
+    container.querySelectorAll("input[data-field]").forEach(function(input){
+        input.addEventListener("change", function(){
+            applyPurchaseItemFieldChange(this);
+        });
+        input.addEventListener("blur", function(){
+            applyPurchaseItemFieldChange(this);
+        });
+    });
+
     updatePurchaseInvoiceTotal();
 }
