@@ -1513,7 +1513,73 @@ function removeSalesInvoiceItem(index){
     currentSalesInvoiceItems.splice(index, 1);
     renderSalesInvoiceItems();
 }
+function updateSalesItemQuantity(index, value){
 
+    if(
+        !Array.isArray(currentSalesInvoiceItems) ||
+        index < 0 ||
+        index >= currentSalesInvoiceItems.length
+    ){
+        return;
+    }
+
+    const qty = Number(value);
+
+    if(!Number.isInteger(qty) || qty <= 0){
+        // مقدار نامعتبر → رندر دوباره با مقدار قبلی
+        renderSalesInvoiceItems();
+        return;
+    }
+
+    currentSalesInvoiceItems[index].quantity = qty;
+    currentSalesInvoiceItems[index].total =
+        qty * Number(currentSalesInvoiceItems[index].unitPrice || 0);
+
+    // فقط جمع‌ها را به‌روز کن (بدون رندر کامل تا فوکوس از بین نرود)
+    updateSalesInvoiceTotal();
+
+    // جمع همان کارت را هم به‌روز کن
+    const cards = document.querySelectorAll("#salesInvoiceItemsContainer .product-card");
+    if(cards[index]){
+        const priceEl = cards[index].querySelector(".product-price");
+        if(priceEl){
+            priceEl.innerHTML = "جمع: " + formatMoney(currentSalesInvoiceItems[index].total);
+        }
+    }
+}
+
+
+function updateSalesItemUnitPrice(index, value){
+
+    if(
+        !Array.isArray(currentSalesInvoiceItems) ||
+        index < 0 ||
+        index >= currentSalesInvoiceItems.length
+    ){
+        return;
+    }
+
+    const price = Number(value);
+
+    if(!Number.isFinite(price) || price < 0){
+        renderSalesInvoiceItems();
+        return;
+    }
+
+    currentSalesInvoiceItems[index].unitPrice = price;
+    currentSalesInvoiceItems[index].total =
+        Number(currentSalesInvoiceItems[index].quantity || 0) * price;
+
+    updateSalesInvoiceTotal();
+
+    const cards = document.querySelectorAll("#salesInvoiceItemsContainer .product-card");
+    if(cards[index]){
+        const priceEl = cards[index].querySelector(".product-price");
+        if(priceEl){
+            priceEl.innerHTML = "جمع: " + formatMoney(currentSalesInvoiceItems[index].total);
+        }
+    }
+}
 
 function renderSalesInvoiceItems(){
 
