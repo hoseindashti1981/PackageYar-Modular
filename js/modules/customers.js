@@ -243,195 +243,141 @@ currentCustomerId
 }
 
 
-function loadCustomers(){
+async function loadCustomers(){
 
-if(!db){
+    if(!db){
+        return;
+    }
 
-return;
+    const list = document.getElementById("customersList");
+    if(!list) return;
 
+    list.innerHTML = "";
+
+    const search = (
+        document.getElementById("customerSearch")?.value || ""
+    ).trim().toLowerCase();
+
+    try{
+        // دریافت مشتریان
+        const customers = await new Promise(function(resolve, reject){
+            const tx = db.transaction("customers", "readonly");
+            const req = tx.objectStore("customers").getAll();
+            req.onsuccess = function(){ resolve(req.result || []); };
+            req.onerror = function(){ reject(new Error("دریافت مشتریان انجام نشد.")); };
+        });
+
+        // دریافت تعمیرات و فاکتورهای فروش برای محاسبه مانده
+        const repairs = await new Promise(function(resolve){
+            if(!db.objectStoreNames.contains("repairs")){
+                resolve([]);
+                return;
+            }
+            const tx = db.transaction("repairs", "readonly");
+            const req = tx.objectStore("repairs").getAll();
+            req.onsuccess = function(){ resolve(req.result || []); };
+            req.onerror = function(){ resolve([]); };
+        });
+
+        const sales = await new Promise(function(resolve){
+            if(!db.objectStoreNames.contains("salesInvoices")){
+                resolve([]);
+                return;
+            }
+            const tx = db.transaction("salesInvoices", "readonly");
+            const req = tx.objectStore("salesInvoices").getAll();
+            req.onsuccess = function(){ resolve(req.result || []); };
+            req.onerror = function(){ resolve([]); };
+        });
+
+        // محاسبه مانده هر مشتری
+        const balanceMap = {};
+
+        repairs.forEach(function(r){
+            const cid = Number(r.customerId);
+            if(!cid) return;
+            const total = Number(r.totalCost || 0);
+            const paid = Number(r.paidAmount || 0);
+            const remaining = Math.max(0, total - paid);
+            balanceMap[cid] = (balanceMap[cid] || 0) + remaining;
+        });
+
+        sales.forEach(function(s){
+            const cid = Number(s.customerId);
+            if(!cid) return;
+            const total = Number(s.totalAmount || 0);
+            const paid = Number(s.paidAmount || 0);
+            const remaining = Math.max(0, total - paid);
+            balanceMap[cid] = (balanceMap[cid] || 0) + remaining;
+        });
+
+        let filtered = customers;
+
+        if(search){
+            filtered = customers.filter(function(customer){
+                return (
+                    (customer.name || "").toLowerCase().includes(search) ||
+                    (customer.phone || "").includes(search)
+                );
+            });
+        }
+
+        filtered.sort(function(a, b){
+            return b.id - a.id;
+        });
+
+        if(filtered.length === 0){
+            list.innerHTML = `
+                <div class="card">
+                    <div class="empty">مشتری مورد نظر پیدا نشد.</div>
+                </div>
+            `;
+            return;
+        }
+
+        filtered.forEach(function(customer){
+            const balance = balanceMap[Number(customer.id)] || 0;
+
+            const card = document.createElement("div");
+            card.className = "card";
+
+            card.innerHTML = `
+                <div class="customer-card" onclick="openCustomerProfile(${customer.id})">
+                    <div class="customer-name">
+                        👤 ${escapeHTML(customer.name || "")}
+                    </div>
+                    <div class="customer-info">
+                        📞 ${escapeHTML(customer.phone || "بدون شماره")}
+                    </div>
+                    <div class="customer-info">
+                        📍 ${escapeHTML(customer.address || "بدون آدرس")}
+                    </div>
+                    <div class="customer-info" style="margin-top:8px;font-weight:bold;${balance > 0 ? "color:#dc2626;" : "color:#16a34a;"}">
+                        💰 مانده حساب: ${formatMoney(balance)}
+                    </div>
+                </div>
+                <div class="card-actions">
+                    <button class="edit-btn" onclick="event.stopPropagation();editCustomer(${customer.id})">
+                        ویرایش
+                    </button>
+                    <button class="danger-btn" onclick="event.stopPropagation();deleteCustomer(${customer.id})">
+                        حذف
+                    </button>
+                </div>
+            `;
+
+            list.appendChild(card);
+        });
+
+    }catch(error){
+        console.error(error);
+        list.innerHTML = `
+            <div class="card">
+                <div class="empty">خطا در بارگذاری مشتریان.</div>
+            </div>
+        `;
+    }
 }
-
-const list =
-document.getElementById(
-"customersList"
-);
-
-list.innerHTML =
-"";
-
-const search =
-(
-document
-.getElementById(
-"customerSearch"
-)
-.value || ""
-)
-.trim()
-.toLowerCase();
-
-const transaction =
-db.transaction(
-"customers",
-"readonly"
-);
-
-const request =
-transaction
-.objectStore(
-"customers"
-)
-.getAll();
-
-request.onsuccess =
-function(){
-
-let customers =
-request.result;
-
-if(search){
-
-customers =
-customers.filter(
-customer =>
-
-(
-customer.name || ""
-)
-.toLowerCase()
-.includes(
-search
-)
-
-||
-
-(
-customer.phone || ""
-)
-.includes(
-search
-)
-
-);
-
-}
-
-customers.sort(
-function(a,b){
-
-return b.id - a.id;
-
-});
-
-if(
-customers.length === 0
-){
-
-list.innerHTML = `
-
-<div class="card">
-
-<div class="empty">
-
-مشتری مورد نظر پیدا نشد.
-
-</div>
-
-</div>
-
-`;
-
-return;
-
-}
-
-customers.forEach(
-function(customer){
-
-const card =
-document.createElement(
-"div"
-);
-
-card.className =
-"card";
-
-card.innerHTML = `
-
-<div
-class="customer-card"
-onclick="openCustomerProfile(${customer.id})">
-
-<div class="customer-name">
-
-👤
-
-${escapeHTML(
-customer.name || ""
-)}
-
-</div>
-
-<div class="customer-info">
-
-📞
-
-${
-escapeHTML(
-customer.phone ||
-"بدون شماره"
-)
-}
-
-</div>
-
-<div class="customer-info">
-
-📍
-
-${
-escapeHTML(
-customer.address ||
-"بدون آدرس"
-)
-}
-
-</div>
-
-</div>
-
-<div class="card-actions">
-
-<button
-class="edit-btn"
-onclick="event.stopPropagation();editCustomer(${customer.id})">
-
-ویرایش
-
-</button>
-
-<button
-class="danger-btn"
-onclick="event.stopPropagation();deleteCustomer(${customer.id})">
-
-حذف
-
-</button>
-
-</div>
-
-`;
-
-list.appendChild(
-card
-);
-
-});
-
-};
-
-}
-
 
 function editCustomer(
 id
