@@ -2,7 +2,7 @@
 async function openSalesInvoiceForm(){
 
     if(!db){
-        alert("دیتابیس هنوز آماده نیست.");
+        showToast("دیتابیس هنوز آماده نیست.", "error");
         return;
     }
     currentSalesInvoiceItems = [];
@@ -194,7 +194,7 @@ function renderSalesInvoiceForm(customers, products){
 async function saveSalesInvoice(){
 
     if(!db){
-        alert("دیتابیس آماده نیست.");
+        showToast("دیتابیس هنوز آماده نیست.", "error");
         return;
     }
 
@@ -203,12 +203,12 @@ async function saveSalesInvoice(){
     const customerId = Number(customerSelect?.value || currentSalesCustomerId || 0);
 
     if(!Number.isInteger(customerId) || customerId <= 0){
-        alert("لطفاً مشتری را انتخاب کنید.");
+        showToast("لطفاً مشتری را انتخاب کنید.", "error");
         return;
     }
 
     if(!Array.isArray(currentSalesInvoiceItems) || currentSalesInvoiceItems.length === 0){
-        alert("حداقل یک کالا باید به فاکتور اضافه شود.");
+       showToast("حداقل یک کالا باید اضافه شود.", "error");
         return;
     }
 
@@ -219,7 +219,7 @@ async function saveSalesInvoice(){
     const paymentStatus = document.getElementById("salesPaymentStatus")?.value || "پرداخت کامل";
 
     if(!Number.isFinite(laborCost) || laborCost < 0){
-        alert("مبلغ اجرت نامعتبر است.");
+        showToast("مبلغ اجرت نامعتبر است.", "error");
         return;
     }
 
@@ -230,11 +230,11 @@ async function saveSalesInvoice(){
         const price = Number(item.unitPrice);
 
         if(!Number.isInteger(qty) || qty <= 0){
-            alert("تعداد یکی از کالاها نامعتبر است.");
+            showtoast("تعداد یکی از کالاها نامعتبر است.", "error");
             return;
         }
         if(!Number.isFinite(price) || price < 0){
-            alert("قیمت یکی از کالاها نامعتبر است.");
+            showtoast("قیمت یکی از کالاها نامعتبر است.", "error");
             return;
         }
 
@@ -245,12 +245,12 @@ async function saveSalesInvoice(){
     const totalAmount = itemsTotal + laborCost;
 
     if(paidAmount < 0){
-        alert("مبلغ پرداخت‌شده نمی‌تواند منفی باشد.");
+        showtoast("مبلغ پرداخت‌شده نمی‌تواند منفی باشد.", "error");
         return;
     }
 
     if(paidAmount > totalAmount){
-        alert("مبلغ پرداخت‌شده نمی‌تواند بیشتر از مبلغ کل باشد.");
+        showtoast("مبلغ پرداخت‌شده نمی‌تواند بیشتر از مبلغ کل باشد.", "error");
         return;
     }
 
