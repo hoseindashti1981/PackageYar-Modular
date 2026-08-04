@@ -5,10 +5,10 @@ async function openSalesInvoiceForm(){
         alert("دیتابیس هنوز آماده نیست.");
         return;
     }
-    let currentSalesInvoiceItems = [];
-    let editingSalesInvoiceId = null;
-    let currentSalesCustomerId = null;
-    let currentSalesRepairId = null;
+    currentSalesInvoiceItems = [];
+    editingSalesInvoiceId = null;
+    currentSalesCustomerId = null;
+    currentSalesRepairId = null;
     currentSalesInvoiceItems = [];
     editingSalesInvoiceId = null;
     currentSalesCustomerId = null;
@@ -1513,6 +1513,57 @@ function removeSalesInvoiceItem(index){
     currentSalesInvoiceItems.splice(index, 1);
     renderSalesInvoiceItems();
 }
+
+function applySalesItemFieldChange(input){
+
+    if(!input) return;
+
+    const index = Number(input.dataset.index);
+    const field = input.dataset.field;
+    const raw = input.value;
+
+    if(
+        !Array.isArray(currentSalesInvoiceItems) ||
+        index < 0 ||
+        index >= currentSalesInvoiceItems.length
+    ){
+        return;
+    }
+
+    if(field === "quantity"){
+        const qty = Number(raw);
+        if(!Number.isInteger(qty) || qty <= 0){
+            input.value = currentSalesInvoiceItems[index].quantity;
+            return;
+        }
+        currentSalesInvoiceItems[index].quantity = qty;
+    }
+
+    if(field === "unitPrice"){
+        const price = Number(raw);
+        if(!Number.isFinite(price) || price < 0){
+            input.value = currentSalesInvoiceItems[index].unitPrice;
+            return;
+        }
+        currentSalesInvoiceItems[index].unitPrice = price;
+    }
+
+    const item = currentSalesInvoiceItems[index];
+    item.total = Number(item.quantity) * Number(item.unitPrice);
+
+    // به‌روز کردن جمع همان کارت
+    const card = input.closest(".product-card");
+    if(card){
+        const priceEl = card.querySelector(".product-price");
+        if(priceEl){
+            priceEl.innerHTML = "جمع: " + formatMoney(item.total);
+        }
+    }
+
+    updateSalesInvoiceTotal();
+}
+
+
 function updateSalesItemQuantity(index, value){
 
     if(
@@ -1584,10 +1635,7 @@ function updateSalesItemUnitPrice(index, value){
 function renderSalesInvoiceItems(){
 
     const container = document.getElementById("salesInvoiceItemsContainer");
-
-    if(!container){
-        return;
-    }
+    if(!container) return;
 
     if(!Array.isArray(currentSalesInvoiceItems) || currentSalesInvoiceItems.length === 0){
         container.innerHTML = `
@@ -1602,12 +1650,13 @@ function renderSalesInvoiceItems(){
     let html = "";
 
     currentSalesInvoiceItems.forEach(function(item, index){
-
-        const total = Number(item.quantity) * Number(item.unitPrice);
+        const qty = Number(item.quantity) || 1;
+        const price = Number(item.unitPrice) || 0;
+        const total = qty * price;
         item.total = total;
 
         html += `
-            <div class="product-card">
+            <div class="product-card" data-index="${index}">
                 <div class="product-title">
                     📦 ${escapeHTML(item.productName || "بدون نام")}
                     ${item.fromRepair ? " <span class=\"badge\">از تعمیر</span>" : ""}
@@ -1620,9 +1669,9 @@ function renderSalesInvoiceItems(){
                         min="1"
                         step="1"
                         inputmode="numeric"
-                        value="${Number(item.quantity) || 1}"
-                        onchange="updateSalesItemQuantity(${index}, this.value)"
-                        oninput="updateSalesItemQuantity(${index}, this.value)"
+                        value="${qty}"
+                        data-field="quantity"
+                        data-index="${index}"
                     >
                 </div>
 
@@ -1633,9 +1682,9 @@ function renderSalesInvoiceItems(){
                         min="0"
                         step="1"
                         inputmode="numeric"
-                        value="${Number(item.unitPrice) || 0}"
-                        onchange="updateSalesItemUnitPrice(${index}, this.value)"
-                        oninput="updateSalesItemUnitPrice(${index}, this.value)"
+                        value="${price}"
+                        data-field="unitPrice"
+                        data-index="${index}"
                     >
                 </div>
 
@@ -1644,7 +1693,7 @@ function renderSalesInvoiceItems(){
                 </div>
 
                 <div class="product-actions" style="margin-top:12px;">
-                    <button class="danger-btn" onclick="removeSalesInvoiceItem(${index})">
+                    <button type="button" class="danger-btn" onclick="removeSalesInvoiceItem(${index})">
                         حذف
                     </button>
                 </div>
@@ -1653,9 +1702,19 @@ function renderSalesInvoiceItems(){
     });
 
     container.innerHTML = html;
+
+    // اتصال رویدادها بعد از رندر
+    container.querySelectorAll("input[data-field]").forEach(function(input){
+        input.addEventListener("change", function(){
+            applySalesItemFieldChange(this);
+        });
+        input.addEventListener("blur", function(){
+            applySalesItemFieldChange(this);
+        });
+    });
+
     updateSalesInvoiceTotal();
 }
-
 function updateSalesInvoiceTotal(){
 
     const totalElement = document.getElementById("salesInvoiceTotal");
