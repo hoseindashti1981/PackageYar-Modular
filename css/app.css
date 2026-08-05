@@ -1196,6 +1196,22 @@ height:64px;
 max-width:64px;
 max-height:64px;
 }
+#dashboardTodayStats .stat-card{
+    border:1px solid #e5e7eb;
+}
 
+#dashboardTodayStats .stat-number{
+    word-break:break-word;
+}
+
+.quick-actions{
+    grid-template-columns:repeat(3,1fr);
+}
+
+@media(min-width:700px){
+    .quick-actions{
+        grid-template-columns:repeat(6,1fr);
+    }
+}
 }
 
