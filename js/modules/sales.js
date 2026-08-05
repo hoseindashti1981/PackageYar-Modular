@@ -189,11 +189,11 @@ function renderSalesInvoiceForm(customers, products){
         statusSelect.onchange = function(){
             updateSalesPaidAmount();
         };
-        if(typeof showPage === "function"){
+       
+    }
+ if(typeof showPage === "function"){
     showPage("inventoryPage");
 }
-    }
-
 }
 async function saveSalesInvoice(){
 
