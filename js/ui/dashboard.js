@@ -127,7 +127,7 @@ function renderDashboardLowStock(products){
         return stock <= min;
     }).sort(function(a, b){
         return Number(a.stock || 0) - Number(b.stock || 0);
-    }).slice(0, 5);
+    }).slice(0, 50);
 
     if(low.length === 0){
         container.innerHTML = `
