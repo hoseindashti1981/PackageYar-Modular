@@ -2,7 +2,6 @@
 
 async function updateDashboard(){
 
-    // شمارنده‌های ساده
     countStore("customers", "customerCount");
     countStore("devices", "deviceCount");
     countStore("repairs", "repairCount");
@@ -19,7 +18,6 @@ async function updateDashboard(){
 
         const today = (typeof getTodayJalali === "function") ? getTodayJalali() : "";
 
-        // ----- امروز -----
         let salesToday = 0;
         let salesPaidToday = 0;
         let repairsTodayCount = 0;
@@ -43,7 +41,6 @@ async function updateDashboard(){
 
         const paidToday = salesPaidToday + repairPaidToday;
 
-        // ----- مانده کل -----
         let totalBalance = 0;
         repairs.forEach(function(r){
             totalBalance += Math.max(0, Number(r.totalCost || 0) - Number(r.paidAmount || 0));
@@ -53,7 +50,8 @@ async function updateDashboard(){
         });
 
         setText("dashSalesToday", formatMoneySafe(salesToday));
-        setText("dashRepairsToday",
+        setText(
+            "dashRepairsToday",
             repairsTodayCount.toLocaleString("fa-IR") + " مورد · " + formatMoneySafe(repairTotalToday)
         );
         setText("dashPaidToday", formatMoneySafe(paidToday));
@@ -64,14 +62,23 @@ async function updateDashboard(){
             balanceEl.style.color = totalBalance > 0 ? "#dc2626" : "#16a34a";
         }
 
-        // ----- موجودی کم -----
         renderDashboardLowStock(products);
-
-        // ----- آخرین تعمیرات -----
         renderDashboardRecentRepairs(repairs);
 
     }catch(error){
         console.error("خطا در به‌روزرسانی داشبورد:", error);
+    }
+}
+
+
+function openReportsFromDashboard(){
+    if(typeof showPage === "function"){
+        showPage("settingsPage");
+    }
+    if(typeof openReportsPage === "function"){
+        openReportsPage();
+    }else if(typeof showToast === "function"){
+        showToast("ماژول گزارش‌ها بارگذاری نشده است.", "error");
     }
 }
 
@@ -115,7 +122,8 @@ function renderDashboardLowStock(products){
 
     const low = (products || []).filter(function(p){
         const stock = Number(p.stock || 0);
-        const min = Number(p.minStock || p.reorderPoint || 2);
+        let min = Number(p.minStock);
+        if(!Number.isFinite(min) || min < 0) min = 2;
         return stock <= min;
     }).sort(function(a, b){
         return Number(a.stock || 0) - Number(b.stock || 0);
@@ -194,14 +202,4 @@ function renderDashboardRecentRepairs(repairs){
         `;
     });
     container.innerHTML = html;
-function openReportsFromDashboard(){
-    if(typeof showPage === "function"){
-        showPage("settingsPage");
-    }
-    if(typeof openReportsPage === "function"){
-        openReportsPage();
-    }else if(typeof showToast === "function"){
-        showToast("ماژول گزارش‌ها بارگذاری نشده است.", "error");
-    }
-}
 }
