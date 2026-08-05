@@ -68,65 +68,94 @@ content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable
 
 <section id="dashboardPage" class="page active">
 
-<div class="section-title">
-خلاصه وضعیت
-</div>
+    <div class="section-title">📊 داشبورد</div>
 
-<div class="stats">
+    <!-- آمار مالی امروز -->
+    <div class="section-title" style="font-size:15px;margin-top:5px;">امروز</div>
+    <div class="stats" id="dashboardTodayStats">
+        <div class="stat-card">
+            <div class="stat-icon">💰</div>
+            <div class="stat-title">فروش امروز</div>
+            <div class="stat-number" id="dashSalesToday" style="font-size:16px;">۰</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon">🔧</div>
+            <div class="stat-title">تعمیرات امروز</div>
+            <div class="stat-number" id="dashRepairsToday" style="font-size:16px;">۰</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon">📥</div>
+            <div class="stat-title">دریافتی امروز</div>
+            <div class="stat-number" id="dashPaidToday" style="font-size:16px;">۰</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon">⚠️</div>
+            <div class="stat-title">مانده کل مشتریان</div>
+            <div class="stat-number" id="dashTotalBalance" style="font-size:16px;">۰</div>
+        </div>
+    </div>
 
-<div class="stat-card">
-<div class="stat-icon">👤</div>
-<div class="stat-title">مشتریان</div>
-<div class="stat-number" id="customerCount">0</div>
-</div>
+    <!-- آمار کلی -->
+    <div class="section-title" style="font-size:15px;margin-top:22px;">خلاصه کلی</div>
+    <div class="stats">
+        <div class="stat-card">
+            <div class="stat-icon">👤</div>
+            <div class="stat-title">مشتریان</div>
+            <div class="stat-number" id="customerCount">0</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon">🔥</div>
+            <div class="stat-title">دستگاه‌ها</div>
+            <div class="stat-number" id="deviceCount">0</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon">🔧</div>
+            <div class="stat-title">تعمیرات</div>
+            <div class="stat-number" id="repairCount">0</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon">📦</div>
+            <div class="stat-title">کالاها</div>
+            <div class="stat-number" id="productCount">0</div>
+        </div>
+    </div>
 
-<div class="stat-card">
-<div class="stat-icon">🔥</div>
-<div class="stat-title">دستگاه‌ها</div>
-<div class="stat-number" id="deviceCount">0</div>
-</div>
+    <!-- دسترسی سریع -->
+    <div class="section-title" style="margin-top:28px;">دسترسی سریع</div>
+    <div class="quick-actions">
+        <div class="action" onclick="openCustomerModal()">
+            <div class="action-icon">👤</div>
+            <div class="action-title">مشتری جدید</div>
+        </div>
+        <div class="action" onclick="startNewRepair()">
+            <div class="action-icon">🔧</div>
+            <div class="action-title">ثبت تعمیر</div>
+        </div>
+        <div class="action" onclick="openSalesInvoiceForm()">
+            <div class="action-icon">🧾</div>
+            <div class="action-title">فاکتور فروش</div>
+        </div>
+        <div class="action" onclick="showPage('inventoryPage')">
+            <div class="action-icon">📦</div>
+            <div class="action-title">انبار</div>
+        </div>
+        <div class="action" onclick="showPage('repairsPage')">
+            <div class="action-icon">📋</div>
+            <div class="action-title">سوابق تعمیر</div>
+        </div>
+        <div class="action" onclick="if(typeof openReportsPage==='function')openReportsPage();else showPage('settingsPage')">
+            <div class="action-icon">📊</div>
+            <div class="action-title">گزارش‌ها</div>
+        </div>
+    </div>
 
-<div class="stat-card">
-<div class="stat-icon">🔧</div>
-<div class="stat-title">تعمیرات</div>
-<div class="stat-number" id="repairCount">0</div>
-</div>
+    <!-- موجودی کم -->
+    <div class="section-title" style="margin-top:28px;">⚠️ موجودی کم</div>
+    <div id="dashboardLowStock"></div>
 
-<div class="stat-card">
-<div class="stat-icon">📦</div>
-<div class="stat-title">کالاها</div>
-<div class="stat-number" id="productCount">0</div>
-</div>
-
-</div>
-
-<div class="section-title" style="margin-top:30px">
-دسترسی سریع
-</div>
-
-<div class="quick-actions">
-
-<div class="action" onclick="openCustomerModal()">
-<div class="action-icon">👤</div>
-<div class="action-title">مشتری جدید</div>
-</div>
-
-<div class="action" onclick="showPage('customersPage')">
-<div class="action-icon">👥</div>
-<div class="action-title">مشتریان</div>
-</div>
-
-<div class="action" onclick="startNewRepair()">
-<div class="action-icon">🔧</div>
-<div class="action-title">ثبت تعمیر</div>
-</div>
-
-<div class="action" onclick="showPage('inventoryPage')">
-<div class="action-icon">📦</div>
-<div class="action-title">انبار</div>
-</div>
-
-</div>
+    <!-- آخرین تعمیرات -->
+    <div class="section-title" style="margin-top:28px;">🔧 آخرین تعمیرات</div>
+    <div id="dashboardRecentRepairs"></div>
 
 </section>
 
