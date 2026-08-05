@@ -6,7 +6,9 @@ async function openReportsPage(){
         alert("دیتابیس آماده نیست.");
         return;
     }
-
+if(typeof showPage === "function"){
+    showPage("settingsPage");
+}
     const page = document.getElementById("settingsPage");
     if(!page) return;
 
