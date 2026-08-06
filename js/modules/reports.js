@@ -14,7 +14,7 @@ async function openReportsPage(){
     const page = document.getElementById("settingsPage");
     if(!page) return;
 
-    // فقط صفحه را نشان بده — بدون renderSettingsPage
+    // نمایش صفحه بدون صدا زدن renderSettingsPage
     document.querySelectorAll(".page").forEach(function(p){
         p.classList.remove("active");
     });
@@ -25,17 +25,6 @@ async function openReportsPage(){
     });
     const settingsNav = document.querySelector('.nav-item[onclick*="settingsPage"]');
     if(settingsNav) settingsNav.classList.add("active");
-
-    const today = getTodayJalali();
-
-    page.innerHTML = `
-        ... همان HTML قبلی گزارش ...
-    `;
-
-    await calculateAndRenderReports(today, today);
-}
-    const page = document.getElementById("settingsPage");
-    if(!page) return;
 
     const today = getTodayJalali();
 
@@ -74,10 +63,8 @@ async function openReportsPage(){
         <div id="reportsTopParts"></div>
     `;
 
-    // پیش‌فرض: امروز
     await calculateAndRenderReports(today, today);
 }
-
 
 function runReportsFilter(){
     const from = (document.getElementById("reportFromDate")?.value || "").trim();
