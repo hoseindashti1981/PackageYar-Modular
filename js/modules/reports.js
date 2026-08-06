@@ -66,12 +66,17 @@ async function openReportsPage(){
     await calculateAndRenderReports(today, today);
 }
 
+
 function runReportsFilter(){
     const from = (document.getElementById("reportFromDate")?.value || "").trim();
     const to = (document.getElementById("reportToDate")?.value || "").trim();
 
     if(!from || !to){
-        alert("لطفاً هر دو تاریخ را وارد کنید.");
+        if(typeof showToast === "function"){
+            showToast("لطفاً هر دو تاریخ را وارد کنید.", "error");
+        }else{
+            alert("لطفاً هر دو تاریخ را وارد کنید.");
+        }
         return;
     }
 
@@ -111,9 +116,9 @@ async function calculateAndRenderReports(fromDate, toDate){
 
     try{
         const [repairs, sales, invoiceItems] = await Promise.all([
-            getAllFromStore("repairs"),
-            getAllFromStore("salesInvoices"),
-            getAllFromStore("invoiceItems")
+            getAllFromStoreReports("repairs"),
+            getAllFromStoreReports("salesInvoices"),
+            getAllFromStoreReports("invoiceItems")
         ]);
 
         function inRange(date){
@@ -121,7 +126,6 @@ async function calculateAndRenderReports(fromDate, toDate){
             return date >= fromDate && date <= toDate;
         }
 
-        // ----- فروش -----
         let salesTotal = 0;
         let salesPaid = 0;
         let salesCount = 0;
@@ -133,7 +137,6 @@ async function calculateAndRenderReports(fromDate, toDate){
             salesPaid += Number(s.paidAmount || 0);
         });
 
-        // ----- تعمیرات -----
         let repairsCount = 0;
         let repairTotal = 0;
         let repairPaid = 0;
@@ -145,7 +148,6 @@ async function calculateAndRenderReports(fromDate, toDate){
             repairPaid += Number(r.paidAmount || 0);
         });
 
-        // ----- مانده کل مشتریان (همیشه کلی، نه فقط بازه) -----
         let totalBalance = 0;
         repairs.forEach(function(r){
             totalBalance += Math.max(0, Number(r.totalCost || 0) - Number(r.paidAmount || 0));
@@ -202,8 +204,6 @@ async function calculateAndRenderReports(fromDate, toDate){
             `;
         }
 
-        // ----- قطعات پرمصرف در بازه -----
-        // از اقلام فاکتورهایی که تاریخ‌شان در بازه است
         const salesInRange = new Set();
         sales.forEach(function(s){
             if(inRange(s.date || "")) salesInRange.add(Number(s.id));
@@ -282,7 +282,7 @@ async function calculateAndRenderReports(fromDate, toDate){
 }
 
 
-function getAllFromStore(storeName){
+function getAllFromStoreReports(storeName){
     return new Promise(function(resolve){
         if(!db || !db.objectStoreNames.contains(storeName)){
             resolve([]);
