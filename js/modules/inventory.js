@@ -476,18 +476,22 @@ return;
 products.forEach(
 function(product){
 
-const stock =
-Number(
-product.stock
-) || 0;
+const stock = Number(product.stock) || 0;
 
-const minStock =
-Number(
-product.minStock
-) || 0;
+let minStock = Number(product.minStock);
+if(!Number.isFinite(minStock) || minStock < 0){
+    minStock = 2; // پیش‌فرض اگر تعیین نشده
+}
 
-const isLow =
-stock <= minStock;
+// سه وضعیت: ناموجود / کم / مناسب
+let stockStatus = "ok"; // مناسب
+if(stock === 0){
+    stockStatus = "out"; // ناموجود
+}else if(stock <= minStock){
+    stockStatus = "low"; // کم
+}
+
+const isLow = (stockStatus !== "ok");
 
 const card =
 document.createElement(
@@ -561,38 +565,23 @@ product.unit ||
 موجودی:
 
 <span class="${
-isLow
-?
-"stock-low"
-:
-"stock-normal"
+    stockStatus === "ok" ? "stock-normal" :
+    stockStatus === "out" ? "stock-out" : "stock-low"
 }">
-
-${stock.toLocaleString("fa-IR")}
-
-${escapeHTML(
-product.unit ||
-"عدد"
-)}
-
+    ${stock.toLocaleString("fa-IR")}
+    ${escapeHTML(product.unit || "عدد")}
 </span>
 
 <span class="stock-badge ${
-isLow
-?
-"low"
-:
-"normal"
+    stockStatus === "ok" ? "normal" :
+    stockStatus === "out" ? "out" : "low"
 }">
-
-${
-isLow
-?
-"⚠️ موجودی کم"
-:
-"✓ موجودی مناسب"
-}
-
+    ${
+        stockStatus === "out" ? "🚫 ناموجود" :
+        stockStatus === "low" ? "⚠️ موجودی کم" :
+        "✓ موجودی مناسب"
+    }
+</span>
 </span>
 
 </div>
