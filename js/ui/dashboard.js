@@ -120,16 +120,27 @@ function renderDashboardLowStock(products){
     const container = document.getElementById("dashboardLowStock");
     if(!container) return;
 
-    const low = (products || []).filter(function(p){
+    const alerts = (products || []).map(function(p){
         const stock = Number(p.stock || 0);
         let min = Number(p.minStock);
         if(!Number.isFinite(min) || min < 0) min = 2;
-        return stock <= min;
-    }).sort(function(a, b){
-        return Number(a.stock || 0) - Number(b.stock || 0);
-    }).slice(0, 50);
 
-    if(low.length === 0){
+        let status = "ok";
+        if(stock === 0) status = "out";
+        else if(stock <= min) status = "low";
+
+        return { product: p, stock: stock, min: min, status: status };
+    }).filter(function(item){
+        return item.status === "out" || item.status === "low";
+    }).sort(function(a, b){
+        // اول ناموجودها، بعد موجودی کمتر
+        if(a.status !== b.status){
+            return a.status === "out" ? -1 : 1;
+        }
+        return a.stock - b.stock;
+    }).slice(0, 8);
+
+    if(alerts.length === 0){
         container.innerHTML = `
             <div class="card">
                 <div class="empty" style="padding:20px 15px;">همه کالاها موجودی کافی دارند ✓</div>
@@ -139,22 +150,26 @@ function renderDashboardLowStock(products){
     }
 
     let html = "";
-    low.forEach(function(p){
-        const stock = Number(p.stock || 0);
+    alerts.forEach(function(item){
+        const p = item.product;
+        const badge = item.status === "out" ? "🚫 ناموجود" : "⚠️ موجودی کم";
+        const colorClass = item.status === "out" ? "stock-out" : "stock-low";
+
         html += `
             <div class="product-card">
                 <div class="product-title">📦 ${escapeHTML(p.name || "بدون نام")}</div>
                 <div class="product-meta">
                     موجودی:
-                    <span class="stock-low">${stock.toLocaleString("fa-IR")}</span>
+                    <span class="${colorClass}">${item.stock.toLocaleString("fa-IR")}</span>
                     ${p.unit ? " " + escapeHTML(p.unit) : ""}
+                    · حداقل: ${item.min.toLocaleString("fa-IR")}
                 </div>
+                <span class="stock-badge ${item.status === "out" ? "out" : "low"}">${badge}</span>
             </div>
         `;
     });
     container.innerHTML = html;
 }
-
 
 function renderDashboardRecentRepairs(repairs){
 
