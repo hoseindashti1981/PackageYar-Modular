@@ -3,11 +3,36 @@
 async function openReportsPage(){
 
     if(!db){
-        alert("دیتابیس آماده نیست.");
+        if(typeof showToast === "function"){
+            showToast("دیتابیس آماده نیست.", "error");
+        }else{
+            alert("دیتابیس آماده نیست.");
+        }
         return;
     }
-if(typeof showPage === "function"){
-    showPage("settingsPage");
+
+    const page = document.getElementById("settingsPage");
+    if(!page) return;
+
+    // فقط صفحه را نشان بده — بدون renderSettingsPage
+    document.querySelectorAll(".page").forEach(function(p){
+        p.classList.remove("active");
+    });
+    page.classList.add("active");
+
+    document.querySelectorAll(".nav-item").forEach(function(item){
+        item.classList.remove("active");
+    });
+    const settingsNav = document.querySelector('.nav-item[onclick*="settingsPage"]');
+    if(settingsNav) settingsNav.classList.add("active");
+
+    const today = getTodayJalali();
+
+    page.innerHTML = `
+        ... همان HTML قبلی گزارش ...
+    `;
+
+    await calculateAndRenderReports(today, today);
 }
     const page = document.getElementById("settingsPage");
     if(!page) return;
