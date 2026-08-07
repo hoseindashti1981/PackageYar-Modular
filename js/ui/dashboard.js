@@ -133,7 +133,6 @@ function renderDashboardLowStock(products){
     }).filter(function(item){
         return item.status === "out" || item.status === "low";
     }).sort(function(a, b){
-        // اول ناموجودها، بعد موجودی کمتر
         if(a.status !== b.status){
             return a.status === "out" ? -1 : 1;
         }
