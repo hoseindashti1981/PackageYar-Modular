@@ -569,20 +569,27 @@ product.unit ||
     stockStatus === "ok" ? "stock-normal" :
     stockStatus === "out" ? "stock-out" : "stock-low"
 }">
-    ${stock.toLocaleString("fa-IR")}
-    ${escapeHTML(product.unit || "عدد")}
+
+${stock.toLocaleString("fa-IR")}
+
+${escapeHTML(
+product.unit ||
+"عدد"
+)}
+
 </span>
 
 <span class="stock-badge ${
     stockStatus === "ok" ? "normal" :
     stockStatus === "out" ? "out" : "low"
 }">
-    ${
-        stockStatus === "out" ? "🚫 ناموجود" :
-        stockStatus === "low" ? "⚠️ موجودی کم" :
-        "✓ موجودی مناسب"
-    }
-</span>
+
+${
+    stockStatus === "out" ? "🚫 ناموجود" :
+    stockStatus === "low" ? "⚠️ موجودی کم" :
+    "✓ موجودی مناسب"
+}
+
 </span>
 
 </div>
