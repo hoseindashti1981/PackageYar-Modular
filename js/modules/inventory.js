@@ -480,16 +480,17 @@ const stock = Number(product.stock) || 0;
 
 let minStock = Number(product.minStock);
 if(!Number.isFinite(minStock) || minStock < 0){
-    minStock = 2; // پیش‌فرض اگر تعیین نشده
+    minStock = 2;
 }
 
-// سه وضعیت: ناموجود / کم / مناسب
-let stockStatus = "ok"; // مناسب
+let stockStatus = "ok";
 if(stock === 0){
-    stockStatus = "out"; // ناموجود
+    stockStatus = "out";
 }else if(stock <= minStock){
-    stockStatus = "low"; // کم
+    stockStatus = "low";
 }
+
+const isLow = (stockStatus !== "ok");
 
 const isLow = (stockStatus !== "ok");
 
