@@ -52,7 +52,7 @@ async function updateDashboard(){
         setText("dashSalesToday", formatMoneySafe(salesToday));
         setText(
             "dashRepairsToday",
-            repairsTodayCount.toLocaleString("fa-IR") + " مورد · " + formatMoneySafe(repairTotalToday)
+            repairsTodayCount.toLocaleString("fa-IR") + " مورد  " + formatMoneySafe(repairTotalToday)
         );
         setText("dashPaidToday", formatMoneySafe(paidToday));
 
