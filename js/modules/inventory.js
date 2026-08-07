@@ -476,18 +476,30 @@ return;
 products.forEach(
 function(product){
 
+
 const stock =
 Number(
 product.stock
 ) || 0;
 
-const minStock =
+let minStock =
 Number(
 product.minStock
-) || 0;
+);
+if(!Number.isFinite(minStock) || minStock < 0){
+minStock = 2;
+}
+
+let stockStatus = "ok";
+if(stock === 0){
+stockStatus = "out";
+}else if(stock <= minStock){
+stockStatus = "low";
+}
 
 const isLow =
-stock <= minStock;
+stockStatus !== "ok";
+    
 const card =
 document.createElement(
 "div"
@@ -560,13 +572,18 @@ product.unit ||
 موجودی:
 
 <span class="${
-isLow
+stockStatus === "out"
+?
+"stock-out"
+:
+(
+stockStatus === "low"
 ?
 "stock-low"
 :
 "stock-normal"
+)
 }">
-
 ${stock.toLocaleString("fa-IR")}
 
 ${escapeHTML(
@@ -577,19 +594,31 @@ product.unit ||
 </span>
 
 <span class="stock-badge ${
-isLow
+stockStatus === "out"
+?
+"out"
+:
+(
+stockStatus === "low"
 ?
 "low"
 :
 "normal"
+)
 }">
 
 ${
-isLow
+stockStatus === "out"
+?
+"🚫 ناموجود"
+:
+(
+stockStatus === "low"
 ?
 "⚠️ موجودی کم"
 :
 "✓ موجودی مناسب"
+)
 }
 
 </span>
