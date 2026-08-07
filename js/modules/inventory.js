@@ -476,24 +476,18 @@ return;
 products.forEach(
 function(product){
 
-const stock = Number(product.stock) || 0;
+const stock =
+Number(
+product.stock
+) || 0;
 
-let minStock = Number(product.minStock);
-if(!Number.isFinite(minStock) || minStock < 0){
-    minStock = 2;
-}
+const minStock =
+Number(
+product.minStock
+) || 0;
 
-let stockStatus = "ok";
-if(stock === 0){
-    stockStatus = "out";
-}else if(stock <= minStock){
-    stockStatus = "low";
-}
-
-const isLow = (stockStatus !== "ok");
-
-const isLow = (stockStatus !== "ok");
-
+const isLow =
+stock <= minStock;
 const card =
 document.createElement(
 "div"
