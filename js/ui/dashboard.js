@@ -134,7 +134,7 @@ function renderDashboardLowStock(products){
         return item.status === "out" || item.status === "low";
     }).sort(function(a, b){
         if(a.status !== b.status){
-            return a.status === "out" ? -1 : 1;
+            return a.status === "low" ? -1 : 1;
         }
         return a.stock - b.stock;
     }).slice(0, 8);
