@@ -560,8 +560,11 @@ product.unit ||
 موجودی:
 
 <span class="${
-    stockStatus === "ok" ? "stock-normal" :
-    stockStatus === "out" ? "stock-out" : "stock-low"
+isLow
+?
+"stock-low"
+:
+"stock-normal"
 }">
 
 ${stock.toLocaleString("fa-IR")}
@@ -574,20 +577,24 @@ product.unit ||
 </span>
 
 <span class="stock-badge ${
-    stockStatus === "ok" ? "normal" :
-    stockStatus === "out" ? "out" : "low"
+isLow
+?
+"low"
+:
+"normal"
 }">
 
 ${
-    stockStatus === "out" ? "🚫 ناموجود" :
-    stockStatus === "low" ? "⚠️ موجودی کم" :
-    "✓ موجودی مناسب"
+isLow
+?
+"⚠️ موجودی کم"
+:
+"✓ موجودی مناسب"
 }
 
 </span>
 
 </div>
-
 <div class="product-price">
 
 قیمت خرید:
