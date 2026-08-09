@@ -31,42 +31,7 @@ function setSetting(key, value){
 }
 
 
-async function applyAppBranding(){
 
-    try{
-        const appName = await getSetting("appName") || "پکیج‌یار";
-        const appSubtitle = await getSetting("appSubtitle") || "سیستم مدیریت تعمیرکار پکیج";
-        const appLogo = await getSetting("appLogo") || "";
-
-        const nameEl = document.getElementById("headerAppName");
-        if(nameEl){
-            nameEl.innerText = "🔥 " + appName;
-        }else{
-            const logoText = document.querySelector(".logo");
-            if(logoText) logoText.innerText = "🔥 " + appName;
-        }
-
-        const subtitle = document.querySelector(".subtitle");
-        if(subtitle) subtitle.innerText = appSubtitle;
-
-        document.title = appName;
-
-        const headerLogo = document.getElementById("headerAppLogo");
-        if(headerLogo){
-            if(appLogo){
-                headerLogo.src = appLogo;
-                headerLogo.style.display = "block";
-                headerLogo.alt = appName;
-            }else{
-                headerLogo.removeAttribute("src");
-                headerLogo.style.display = "none";
-            }
-        }
-
-    }catch(e){
-        console.error("خطا در اعمال نام/لوگوی برنامه:", e);
-    }
-}
 
 
 async function renderSettingsPage(){
@@ -77,6 +42,8 @@ async function renderSettingsPage(){
     const appName = await getSetting("appName") || "پکیج‌یار";
     const appSubtitle = await getSetting("appSubtitle") || "سیستم مدیریت تعمیرکار پکیج";
     const appLogo = await getSetting("appLogo") || "";
+    const appHeaderBanner =
+    await getSetting("appHeaderBanner") || "";
 
     page.innerHTML = `
     <div class="section-title">⚙️ تنظیمات</div>
@@ -201,6 +168,101 @@ async function renderSettingsPage(){
         </p>
     </div>
 
+    <!-- =====================================================
+     بنر هدر برنامه
+     ===================================================== -->
+
+<div class="card">
+
+    <h3 style="margin-top:0;">
+        🖼️ بنر هدر برنامه
+    </h3>
+
+    <p style="color:#666;font-size:13px;line-height:1.8;">
+
+        این تصویر در بالای برنامه و قبل از عنوان
+        نمایش داده می‌شود.
+
+        <br>
+
+        برای نتیجه بهتر، تصویر عریض انتخاب کنید.
+
+        <br>
+
+        اندازه پیشنهادی:
+        <strong>1941 × 471 پیکسل</strong>
+
+    </p>
+
+
+    <div
+        id="appHeaderBannerPreviewContainer"
+        class="app-header-banner-preview-container"
+        style="${appHeaderBanner ? "" : "display:none;"}"
+    >
+
+        <img
+            id="appHeaderBannerPreview"
+            class="app-header-banner-preview"
+            src="${appHeaderBanner}"
+            alt="پیش‌نمایش بنر هدر"
+        >
+
+    </div>
+
+
+    <div
+        id="appHeaderBannerEmptyMessage"
+        class="app-header-banner-empty-message"
+        style="${appHeaderBanner ? "display:none;" : ""}"
+    >
+        هنوز بنر هدر انتخاب نشده است.
+    </div>
+
+
+    <input
+        id="appHeaderBannerInput"
+        type="file"
+        accept="image/png,image/jpeg,image/webp"
+        style="display:none;"
+        onchange="handleHeaderBannerSelection(event)"
+    >
+
+
+    <button
+        type="button"
+        class="secondary-btn"
+        style="width:100%;margin-top:10px;"
+        onclick="document.getElementById('appHeaderBannerInput').click()"
+    >
+        🖼️ انتخاب بنر هدر
+    </button>
+
+
+    <button
+        id="removeHeaderBannerButton"
+        type="button"
+        class="danger-btn"
+        style="width:100%;margin-top:10px;${appHeaderBanner ? "" : "display:none;"}"
+        onclick="removeHeaderBanner()"
+    >
+        🗑️ حذف بنر هدر
+    </button>
+
+
+    <p
+        style="
+            color:#888;
+            font-size:12px;
+            line-height:1.7;
+            margin-bottom:0;
+        "
+    >
+        فرمت‌های مجاز:
+        PNG، JPG و WEBP
+    </p>
+
+</div>
 
     <!-- =====================================================
          قیمت فروش گروهی
@@ -694,7 +756,289 @@ async function removeAppLogo(){
     }
 
 }
+/* =========================================================
+   HEADER BANNER
+   ========================================================= */
 
+
+/**
+ * انتخاب و ذخیره بنر هدر
+ */
+async function handleHeaderBannerSelection(event){
+
+    const input = event?.target;
+
+    if(
+        !input ||
+        !input.files ||
+        !input.files[0]
+    ){
+        return;
+    }
+
+
+    const file =
+        input.files[0];
+
+
+    /* فرمت‌های مجاز */
+    const allowedTypes = [
+        "image/png",
+        "image/jpeg",
+        "image/webp"
+    ];
+
+
+    if(!allowedTypes.includes(file.type)){
+
+        alert(
+            "فرمت تصویر مجاز نیست.\n\n" +
+            "لطفاً یک تصویر PNG، JPG یا WEBP انتخاب کنید."
+        );
+
+        input.value = "";
+
+        return;
+    }
+
+
+    /*
+     * محدودیت حجم:
+     * 5 مگابایت
+     */
+    const maxSize =
+        5 * 1024 * 1024;
+
+
+    if(file.size > maxSize){
+
+        alert(
+            "حجم تصویر زیاد است.\n\n" +
+            "حداکثر حجم مجاز بنر هدر ۵ مگابایت است."
+        );
+
+        input.value = "";
+
+        return;
+    }
+
+
+    try{
+
+        const dataUrl =
+            await readImageFileAsDataURL(file);
+
+
+        if(!dataUrl){
+
+            throw new Error(
+                "خواندن تصویر انجام نشد."
+            );
+
+        }
+
+
+        /*
+         * ذخیره مستقل از appLogo
+         */
+        await setSetting(
+            "appHeaderBanner",
+            dataUrl
+        );
+
+
+        /*
+         * اعمال فوری روی هدر
+         */
+        await applyHeaderBanner();
+
+
+        /* پیش‌نمایش */
+        const previewContainer =
+            document.getElementById(
+                "appHeaderBannerPreviewContainer"
+            );
+
+        const preview =
+            document.getElementById(
+                "appHeaderBannerPreview"
+            );
+
+        const emptyMessage =
+            document.getElementById(
+                "appHeaderBannerEmptyMessage"
+            );
+
+        const removeButton =
+            document.getElementById(
+                "removeHeaderBannerButton"
+            );
+
+
+        if(preview){
+
+            preview.src =
+                dataUrl;
+
+        }
+
+
+        if(previewContainer){
+
+            previewContainer.style.display =
+                "block";
+
+        }
+
+
+        if(emptyMessage){
+
+            emptyMessage.style.display =
+                "none";
+
+        }
+
+
+        if(removeButton){
+
+            removeButton.style.display =
+                "block";
+
+        }
+
+
+        /* پاک کردن input */
+        input.value = "";
+
+
+        alert(
+            "بنر هدر با موفقیت ذخیره شد."
+        );
+
+
+    }catch(error){
+
+        console.error(
+            "خطا در ذخیره بنر هدر:",
+            error
+        );
+
+
+        alert(
+            error.message ||
+            "ذخیره بنر هدر انجام نشد."
+        );
+
+    }
+
+}
+
+
+/**
+ * حذف بنر هدر
+ */
+async function removeHeaderBanner(){
+
+    const confirmed =
+        confirm(
+            "آیا مطمئن هستید که می‌خواهید بنر هدر حذف شود؟"
+        );
+
+
+    if(!confirmed){
+
+        return;
+
+    }
+
+
+    try{
+
+        await setSetting(
+            "appHeaderBanner",
+            ""
+        );
+
+
+        const previewContainer =
+            document.getElementById(
+                "appHeaderBannerPreviewContainer"
+            );
+
+        const preview =
+            document.getElementById(
+                "appHeaderBannerPreview"
+            );
+
+        const emptyMessage =
+            document.getElementById(
+                "appHeaderBannerEmptyMessage"
+            );
+
+        const removeButton =
+            document.getElementById(
+                "removeHeaderBannerButton"
+            );
+
+
+        if(previewContainer){
+
+            previewContainer.style.display =
+                "none";
+
+        }
+
+
+        if(preview){
+
+            preview.removeAttribute("src");
+
+        }
+
+
+        if(emptyMessage){
+
+            emptyMessage.style.display =
+                "block";
+
+        }
+
+
+        if(removeButton){
+
+            removeButton.style.display =
+                "none";
+
+        }
+
+
+        /*
+         * حذف فوری از هدر
+         */
+        await applyHeaderBanner();
+
+
+        alert(
+            "بنر هدر با موفقیت حذف شد."
+        );
+
+
+    }catch(error){
+
+        console.error(
+            "خطا در حذف بنر هدر:",
+            error
+        );
+
+
+        alert(
+            error.message ||
+            "حذف بنر هدر انجام نشد."
+        );
+
+    }
+
+}
 
 async function exportFullBackup(){
 

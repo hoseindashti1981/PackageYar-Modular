@@ -1,4 +1,4 @@
-const CACHE_NAME = "packageyar-v5";
+const CACHE_NAME = "packageyar-v6";
 
 const ASSETS = [
   "./",

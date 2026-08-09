@@ -31,36 +31,68 @@ content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable
 
 <header>
 
-<div class="header-top">
+    <!-- =====================================================
+         بنر هدر
+         تصویر از تنظیمات برنامه بارگذاری می‌شود
+         ===================================================== -->
 
-<div>
+    <div
+        id="headerBannerContainer"
+        class="header-banner-container"
+        style="display:none;"
+    >
+        <img
+            id="headerBanner"
+            class="header-banner"
+            alt=""
+        >
+    </div>
 
-<div class="logo" style="display:flex;align-items:left;gap:220px;">
-    <img id="headerAppLogo" alt="" style="display:none;width:56px;height:56px;object-fit:contain;border-radius:6px;shrink:0;">
-    <span id="headerAppName">🔧 پکیج‌یار</span>
-</div>
 
-<div class="subtitle">
-سیستم مدیریت تعمیرکار پکیج
-</div>
+    <!-- =====================================================
+         بخش اصلی هدر
+         ===================================================== -->
 
-</div>
+    <div class="header-top">
 
-<div style="font-size:28px">
-🔥
-</div>
+        <div class="header-brand">
 
-</div>
+            <div class="logo">
 
-<div class="today">
+                <img
+                    id="headerAppLogo"
+                    alt=""
+                    style="display:none;"
+                >
 
-امروز:
+                <span id="headerAppName">
+                    🔥 پکیج‌یار
+                </span>
 
-<strong id="todayDate">
-در حال بارگذاری...
-</strong>
+            </div>
 
-</div>
+            <div class="subtitle">
+                سیستم مدیریت تعمیرکار پکیج
+            </div>
+
+        </div>
+
+        <div class="header-icon">
+            🔥
+        </div>
+
+    </div>
+
+
+    <div class="today">
+
+        امروز:
+
+        <strong id="todayDate">
+            در حال بارگذاری...
+        </strong>
+
+    </div>
 
 </header>
 

@@ -41,21 +41,180 @@ padding:20px 18px 18px;
 padding-top:calc(20px + env(safe-area-inset-top));
 border-radius:0 0 25px 25px;
 }
+/* =========================================================
+   HEADER
+   ========================================================= */
+
+header{
+    background:#1f2937;
+    color:white;
+
+    padding:20px 18px 18px;
+    padding-top:calc(20px + env(safe-area-inset-top));
+
+    border-radius:0 0 25px 25px;
+
+    overflow:hidden;
+}
+
+
+/* =========================================================
+   HEADER BANNER
+   ========================================================= */
+
+.header-banner-container{
+    width:100%;
+
+    margin:0 0 18px;
+
+    border-radius:16px;
+
+    overflow:hidden;
+
+    background:rgba(255,255,255,.08);
+}
+
+
+.header-banner{
+    display:block;
+
+    width:100%;
+
+    /*
+     * تصویر اصلی شما:
+     * 1941 × 471
+     *
+     * ارتفاع محدود می‌شود تا هدر روی
+     * دسکتاپ بیش از حد بلند نشود.
+     */
+    height:clamp(90px, 20vw, 180px);
+
+    object-fit:cover;
+
+    object-position:center;
+
+    border-radius:16px;
+}
+
+
+/* =========================================================
+   HEADER TOP
+   ========================================================= */
+
 .header-top{
-display:flex;
-justify-content:space-between;
-align-items:center;
+    display:flex;
+
+    justify-content:space-between;
+
+    align-items:center;
+
+    gap:16px;
+
+    min-width:0;
 }
+
+
+.header-brand{
+    min-width:0;
+
+    flex:1;
+}
+
+
+/* =========================================================
+   APP NAME
+   ========================================================= */
+
 .logo{
-font-size:22px;
-font-weight:bold;
-font-family:Vazirmatn, Tahoma, sans-serif;
+    display:flex;
+
+    align-items:center;
+
+    gap:10px;
+
+    min-width:0;
+
+    font-size:22px;
+
+    font-weight:bold;
+
+    font-family:
+        Vazirmatn,
+        Tahoma,
+        sans-serif;
 }
+
+
+.logo span{
+    min-width:0;
+
+    overflow:hidden;
+
+    text-overflow:ellipsis;
+
+    white-space:nowrap;
+}
+
+
+/* =========================================================
+   EXISTING BUSINESS LOGO
+   ========================================================= */
+
+#headerAppLogo{
+    display:block;
+
+    width:56px;
+
+    height:56px;
+
+    flex:0 0 56px;
+
+    object-fit:contain;
+
+    border-radius:8px;
+
+    background:rgba(255,255,255,.08);
+}
+
+
+/* =========================================================
+   SUBTITLE
+   ========================================================= */
+
 .subtitle{
-font-size:12px;
-opacity:.7;
-margin-top:5px;
+    font-size:12px;
+
+    opacity:.7;
+
+    margin-top:5px;
+
+    line-height:1.7;
 }
+
+
+/* =========================================================
+   HEADER ICON
+   ========================================================= */
+
+.header-icon{
+    flex:0 0 auto;
+
+    font-size:28px;
+
+    line-height:1;
+}
+
+
+/* =========================================================
+   TODAY
+   ========================================================= */
+
+.today{
+    margin-top:18px;
+
+    font-size:14px;
+}
+
 .today{
 margin-top:18px;
 font-size:14px;
@@ -517,7 +676,65 @@ border:1px dashed #ccc;
 border-radius:10px;
 box-sizing:border-box;
 }
+/* =========================================================
+   پیش‌نمایش بنر هدر در تنظیمات
+   ========================================================= */
 
+.app-header-banner-preview-container{
+    width:100%;
+
+    margin-top:15px;
+
+    padding:10px;
+
+    background:#f7f7f7;
+
+    border:1px solid #ddd;
+
+    border-radius:10px;
+
+    box-sizing:border-box;
+
+    overflow:hidden;
+}
+
+
+.app-header-banner-preview{
+    display:block;
+
+    width:100%;
+
+    max-height:180px;
+
+    object-fit:cover;
+
+    object-position:center;
+
+    border-radius:8px;
+}
+
+
+.app-header-banner-empty-message{
+    width:100%;
+
+    margin-top:15px;
+
+    padding:20px;
+
+    text-align:center;
+
+    color:#888;
+
+    font-size:13px;
+
+    background:#f7f7f7;
+
+    border:1px dashed #ccc;
+
+    border-radius:10px;
+
+    box-sizing:border-box;
+}
 /* فاکتور چاپی فروش */
 .sales-print-preview{
 direction:rtl;
@@ -1057,4 +1274,48 @@ height:64px;
 max-width:64px;
 max-height:64px;
 }
+}
+/* =========================================================
+   HEADER MOBILE
+   ========================================================= */
+
+@media (max-width:600px){
+
+    header{
+        padding-left:14px;
+        padding-right:14px;
+    }
+
+    .header-banner-container{
+        margin-bottom:14px;
+
+        border-radius:12px;
+    }
+
+    .header-banner{
+        height:clamp(85px, 24vw, 115px);
+
+        border-radius:12px;
+    }
+
+    .logo{
+        font-size:19px;
+
+        gap:8px;
+    }
+
+    #headerAppLogo{
+        width:46px;
+        height:46px;
+        flex-basis:46px;
+    }
+
+    .subtitle{
+        font-size:11px;
+    }
+
+    .header-icon{
+        font-size:24px;
+    }
+
 }
