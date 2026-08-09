@@ -823,6 +823,22 @@ border:1px solid #ddd;
 border-radius:8px;
 box-sizing:border-box;
 }
+
+.sales-print-stamp {
+    width: 100%;
+    margin-top: 12px;
+    text-align: center;
+    break-inside: avoid;
+    page-break-inside: avoid;
+}
+
+.sales-print-stamp img {
+    display: inline-block;
+    width: auto;
+    max-width: 180px;
+    max-height: 90px;
+    object-fit: contain;
+}
 .sales-print-meta-item{
 display:flex;
 gap:6px;
@@ -954,6 +970,37 @@ margin-top:35px;
 padding-top:20px;
 border-top:1px solid #aaa;
 box-sizing:border-box;
+}
+.sales-print-thanks-area{
+display:flex;
+align-items:center;
+justify-content:center;
+gap:12px;
+flex:1;
+min-width:0;
+}
+
+.sales-print-thanks-area .sales-print-thanks{
+flex:0 1 auto;
+text-align:center;
+}
+
+.sales-print-thanks-area .sales-print-stamp{
+display:inline-block;
+width:auto;
+margin:0;
+flex-shrink:0;
+text-align:center;
+transform:rotate(-8deg);
+transform-origin:center center;
+}
+
+.sales-print-thanks-area .sales-print-stamp img{
+display:block;
+width:auto;
+max-width:180px;
+max-height:90px;
+object-fit:contain;
 }
 .sales-print-signature{
 width:200px;
@@ -1226,6 +1273,32 @@ line-height:1.4 !important;
 .sales-print-thanks{
 font-size:8px !important;
 }
+.sales-print-stamp{
+display:inline-block !important;
+visibility:visible !important;
+width:auto !important;
+height:auto !important;
+margin:0 !important;
+padding:0 !important;
+flex-shrink:0 !important;
+text-align:center !important;
+page-break-inside:avoid !important;
+break-inside:avoid !important;
+transform:rotate(-8deg) !important;
+transform-origin:center center !important;
+}
+
+.sales-print-stamp img{
+display:block !important;
+visibility:visible !important;
+width:auto !important;
+height:auto !important;
+max-width:180px !important;
+max-height:90px !important;
+object-fit:contain !important;
+}
+
+
 }
 
 @media screen and (max-width:600px){

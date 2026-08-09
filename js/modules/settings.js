@@ -40,10 +40,12 @@ async function renderSettingsPage(){
     if(!page) return;
 
     const appName = await getSetting("appName") || "پکیج‌یار";
-    const appSubtitle = await getSetting("appSubtitle") || "سیستم مدیریت تعمیرکار پکیج";
-    const appLogo = await getSetting("appLogo") || "";
-    const appHeaderBanner =
+const appSubtitle = await getSetting("appSubtitle") || "سیستم مدیریت تعمیرکار پکیج";
+const appLogo = await getSetting("appLogo") || "";
+const appHeaderBanner =
     await getSetting("appHeaderBanner") || "";
+const shopStamp =
+    await getSetting("shopStamp") || "";
 
     page.innerHTML = `
     <div class="section-title">⚙️ تنظیمات</div>
@@ -263,6 +265,80 @@ async function renderSettingsPage(){
     </p>
 
 </div>
+
+<!-- =====================================================
+     مهر فروشگاه
+     ===================================================== -->
+
+<div class="card">
+
+    <h3 style="margin-top:0;">
+        🔖 مهر فروشگاه
+    </h3>
+
+    <p style="color:#666;font-size:13px;line-height:1.8;">
+        تصویر مهر فروشگاه فقط در فاکتورهای چاپی نمایش داده می‌شود
+        و در Header یا صفحات عادی برنامه نمایش داده نخواهد شد.
+        <br>
+        برای نتیجه بهتر، از تصویر واضح و با پس‌زمینه شفاف استفاده کنید.
+    </p>
+
+    <div
+        id="shopStampPreviewContainer"
+        class="shop-stamp-preview-container"
+        style="${shopStamp ? "" : "display:none;"}"
+    >
+        <img
+            id="shopStampPreview"
+            class="shop-stamp-preview"
+            src="${shopStamp}"
+            alt="پیش‌نمایش مهر فروشگاه"
+        >
+    </div>
+
+    <div
+        id="shopStampEmptyMessage"
+        class="shop-stamp-empty-message"
+        style="${shopStamp ? "display:none;" : ""}"
+    >
+        هنوز مهر فروشگاه انتخاب نشده است.
+    </div>
+
+    <input
+        id="shopStampInput"
+        type="file"
+        accept="image/png,image/jpeg,image/webp"
+        style="display:none;"
+        onchange="handleShopStampSelection(event)"
+    >
+
+    <button
+        type="button"
+        class="secondary-btn"
+        style="width:100%;margin-top:10px;"
+        onclick="document.getElementById('shopStampInput').click()"
+    >
+        🔖 انتخاب تصویر مهر
+    </button>
+
+    <button
+        id="removeShopStampButton"
+        type="button"
+        class="danger-btn"
+        style="width:100%;margin-top:10px;${shopStamp ? "" : "display:none;"}"
+        onclick="removeShopStamp()"
+    >
+        🗑️ حذف مهر
+    </button>
+
+    <p style="color:#888;font-size:12px;line-height:1.7;margin-bottom:0;">
+        فرمت‌های مجاز: PNG، JPG و WEBP
+        <br>
+        حداکثر حجم: ۵ مگابایت
+    </p>
+
+</div>
+
 
     <!-- =====================================================
          قیمت فروش گروهی
@@ -1034,6 +1110,233 @@ async function removeHeaderBanner(){
         alert(
             error.message ||
             "حذف بنر هدر انجام نشد."
+        );
+
+    }
+
+}
+
+/* =========================================================
+   SHOP STAMP
+   ========================================================= */
+
+/**
+ * انتخاب و ذخیره مهر فروشگاه
+ */
+async function handleShopStampSelection(event){
+
+    const input = event?.target;
+
+    if(
+        !input ||
+        !input.files ||
+        !input.files[0]
+    ){
+        return;
+    }
+
+    const file = input.files[0];
+
+    /* فرمت‌های مجاز */
+    const allowedTypes = [
+        "image/png",
+        "image/jpeg",
+        "image/webp"
+    ];
+
+    if(!allowedTypes.includes(file.type)){
+
+        alert(
+            "فرمت تصویر مجاز نیست.\n\n" +
+            "لطفاً یک تصویر PNG، JPG یا WEBP انتخاب کنید."
+        );
+
+        input.value = "";
+
+        return;
+    }
+
+    /* محدودیت حجم: 5 مگابایت */
+    const maxSize = 5 * 1024 * 1024;
+
+    if(file.size > maxSize){
+
+        alert(
+            "حجم تصویر زیاد است.\n\n" +
+            "حداکثر حجم مجاز مهر ۵ مگابایت است."
+        );
+
+        input.value = "";
+
+        return;
+    }
+
+    try{
+
+        const dataUrl =
+            await readImageFileAsDataURL(file);
+
+        if(!dataUrl){
+
+            throw new Error(
+                "خواندن تصویر انجام نشد."
+            );
+        }
+
+        /* ذخیره مهر در تنظیمات */
+        await setSetting(
+            "shopStamp",
+            dataUrl
+        );
+
+        /* به‌روزرسانی پیش‌نمایش */
+        const previewContainer =
+            document.getElementById(
+                "shopStampPreviewContainer"
+            );
+
+        const preview =
+            document.getElementById(
+                "shopStampPreview"
+            );
+
+        const emptyMessage =
+            document.getElementById(
+                "shopStampEmptyMessage"
+            );
+
+        const removeButton =
+            document.getElementById(
+                "removeShopStampButton"
+            );
+
+        if(preview){
+
+            preview.src = dataUrl;
+
+        }
+
+        if(previewContainer){
+
+            previewContainer.style.display = "flex";
+
+        }
+
+        if(emptyMessage){
+
+            emptyMessage.style.display = "none";
+
+        }
+
+        if(removeButton){
+
+            removeButton.style.display = "block";
+
+        }
+
+        /* پاک کردن input */
+        input.value = "";
+
+        alert(
+            "مهر فروشگاه با موفقیت ذخیره شد."
+        );
+
+    }catch(error){
+
+        console.error(
+            "خطا در ذخیره مهر فروشگاه:",
+            error
+        );
+
+        alert(
+            error.message ||
+            "ذخیره مهر فروشگاه انجام نشد."
+        );
+
+    }
+
+}
+/**
+ * حذف مهر فروشگاه
+ */
+async function removeShopStamp(){
+
+    const confirmed =
+        confirm(
+            "آیا مطمئن هستید که می‌خواهید مهر فروشگاه حذف شود؟"
+        );
+
+    if(!confirmed){
+
+        return;
+
+    }
+
+    try{
+
+        await setSetting(
+            "shopStamp",
+            ""
+        );
+
+        const previewContainer =
+            document.getElementById(
+                "shopStampPreviewContainer"
+            );
+
+        const preview =
+            document.getElementById(
+                "shopStampPreview"
+            );
+
+        const emptyMessage =
+            document.getElementById(
+                "shopStampEmptyMessage"
+            );
+
+        const removeButton =
+            document.getElementById(
+                "removeShopStampButton"
+            );
+
+        if(previewContainer){
+
+            previewContainer.style.display = "none";
+
+        }
+
+        if(preview){
+
+            preview.removeAttribute("src");
+
+        }
+
+        if(emptyMessage){
+
+            emptyMessage.style.display = "block";
+
+        }
+
+        if(removeButton){
+
+            removeButton.style.display = "none";
+
+        }
+
+        alert(
+            "مهر فروشگاه با موفقیت حذف شد."
+        );
+
+    }catch(error){
+
+        console.error(
+            "خطا در حذف مهر فروشگاه:",
+            error
+        );
+
+        alert(
+            error.message ||
+            "حذف مهر فروشگاه انجام نشد."
         );
 
     }

@@ -24,7 +24,7 @@ async function showSalesInvoicePrintPreview(invoiceId){
         const appLogo = await getSetting("appLogo") || "";
         const businessPhone = await getSetting("businessPhone") || "";
         const businessAddress = await getSetting("businessAddress") || "";
-        
+        const shopStamp = await getSetting("shopStamp") || "";
         // ---------- فاکتور ----------
         const invoice = await new Promise(function(resolve, reject){
             const tx = db.transaction(["salesInvoices"], "readonly");
@@ -87,7 +87,18 @@ async function showSalesInvoicePrintPreview(invoiceId){
             ? `<div class="sales-print-logo"><img src="${appLogo}" alt="لوگوی ${escapeHTML(appName)}"></div>`
             : "";
 
-        // ---------- ردیف اقلام ----------
+       const stampHTML = shopStamp
+    ? `
+        <div class="sales-print-stamp">
+            <img
+                src="${shopStamp}"
+                alt="مهر فروشگاه"
+            >
+        </div>
+      `
+    : "";
+       
+            // ---------- ردیف اقلام ----------
         let itemsRows = "";
         if(items.length === 0){
             itemsRows = `
@@ -256,15 +267,26 @@ async function showSalesInvoicePrintPreview(invoiceId){
                 ${noteHTML}
 
                 <div class="sales-print-footer">
-                    <div class="sales-print-thanks">از اعتماد شما سپاسگزاریم</div>
-                    <div class="sales-print-signature">
-                        امضاء فروشنده<br><br>........................
-                    </div>
-                    <div class="sales-print-signature">
-                        امضاء مشتری<br><br>........................
-                    </div>
-                </div>
 
+    <div class="sales-print-thanks-area">
+        <div class="sales-print-thanks">
+            از اعتماد شما سپاسگزاریم
+        </div>
+
+        ${stampHTML}
+    </div>
+
+    <div class="sales-print-signature">
+        امضاء فروشنده<br><br>........................
+    </div>
+
+    <div class="sales-print-signature">
+        امضاء مشتری<br><br>........................
+    </div>
+
+</div>
+</div>
+</div>
             </div>
         </div>
         `;
