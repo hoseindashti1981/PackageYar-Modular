@@ -17,11 +17,11 @@ async function applyAppBranding(){
 
         const appName =
             await getSetting("appName") ||
-            "پکیج‌یار";
+            "شوفاژچی";
 
         const appSubtitle =
             await getSetting("appSubtitle") ||
-            "سیستم مدیریت تعمیرکار پکیج";
+            "سیستم مدیریت و حسابداری سرویسکار پکیج";
 
         const appLogo =
             await getSetting("appLogo") ||
@@ -34,7 +34,7 @@ async function applyAppBranding(){
         if(nameEl){
 
             nameEl.innerText =
-                "🔥 " + appName;
+                " " + appName;
 
         }else{
 
@@ -44,7 +44,7 @@ async function applyAppBranding(){
             if(logoText){
 
                 logoText.innerText =
-                    "🔥 " + appName;
+                    " " + appName;
 
             }
 
