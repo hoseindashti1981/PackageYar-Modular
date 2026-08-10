@@ -1,4 +1,9 @@
-const CACHE_NAME = "packageyar-v6";
+/* ============================================================
+   PackageYar - Service Worker
+   استراتژی: Network First (آپدیت فوری) + Fallback به کش در حالت آفلاین
+   ============================================================ */
+
+const CACHE_NAME = "packageyar-v7";
 
 const ASSETS = [
   "./",
@@ -45,71 +50,72 @@ const ASSETS = [
   "./js/modules/reports.js",
 
   // pwa
-  "./js/pwa/register.js",
-  "./js/pwa/update.js"
+  "./js/pwa/register.js"
 ];
 
-self.addEventListener("install", function (event) {
+/* ---------- Install ---------- */
+self.addEventListener("install", (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then(function (cache) {
-      return cache.addAll(ASSETS);
-    }).then(function () {
-      return self.skipWaiting();
-    })
+    caches.open(CACHE_NAME)
+      .then((cache) => cache.addAll(ASSETS))
+      .then(() => self.skipWaiting())   // بلافاصله فعال شود
   );
 });
 
-self.addEventListener("activate", function (event) {
+/* ---------- Activate ---------- */
+self.addEventListener("activate", (event) => {
   event.waitUntil(
-    caches.keys().then(function (keys) {
+    caches.keys().then((keys) => {
       return Promise.all(
-        keys.map(function (key) {
-          if (key !== CACHE_NAME) {
-            return caches.delete(key);
-          }
-        })
+        keys
+          .filter((key) => key !== CACHE_NAME)
+          .map((key) => caches.delete(key))
       );
-    }).then(function () {
-      return self.clients.claim();
-    })
+    }).then(() => self.clients.claim())  // کنترل همه تب‌ها
   );
 });
 
-self.addEventListener("fetch", function (event) {
+/* ---------- Fetch: Network First ---------- */
+self.addEventListener("fetch", (event) => {
+  // فقط درخواست‌های هم‌منبع
+  if (!event.request.url.startsWith(self.location.origin)) {
+    return;
+  }
+
   event.respondWith(
-    caches.match(event.request).then(function (cached) {
-      if (cached) {
-        return cached;
-      }
-
-      return fetch(event.request).then(function (response) {
-        // فقط درخواست‌های موفق هم‌منبع را در کش ذخیره کن
-        if (
-          !response ||
-          response.status !== 200 ||
-          response.type !== "basic"
-        ) {
-          return response;
+    fetch(event.request)
+      .then((networkResponse) => {
+        // پاسخ موفق را در کش ذخیره کن (برای استفاده آفلاین)
+        if (networkResponse && networkResponse.status === 200) {
+          const responseClone = networkResponse.clone();
+          caches.open(CACHE_NAME).then((cache) => {
+            cache.put(event.request, responseClone);
+          });
         }
-
-        const responseToCache = response.clone();
-
-        caches.open(CACHE_NAME).then(function (cache) {
-          cache.put(event.request, responseToCache);
+        return networkResponse;
+      })
+      .catch(() => {
+        // شبکه در دسترس نبود → از کش بخوان
+        return caches.match(event.request).then((cached) => {
+          if (cached) {
+            return cached;
+          }
+          // اگر صفحه navigate بود و در کش نبود، index.html را برگردان
+          if (event.request.mode === "navigate") {
+            return caches.match("./index.html");
+          }
+          return new Response("آفلاین هستید و این فایل در کش موجود نیست.", {
+            status: 503,
+            statusText: "Service Unavailable",
+            headers: { "Content-Type": "text/plain; charset=utf-8" }
+          });
         });
-
-        return response;
-      }).catch(function () {
-        // اگر آفلاین بود و در کش نبود، همان صفحه اصلی را برگردان
-        if (event.request.mode === "navigate") {
-          return caches.match("./index.html");
-        }
-      });
-    })
+      })
   );
 });
 
-self.addEventListener("message", function (event) {
+/* ---------- پیام از صفحه ---------- */
+self.addEventListener("message", (event) => {
   if (event.data && event.data.type === "SKIP_WAITING") {
     self.skipWaiting();
   }
