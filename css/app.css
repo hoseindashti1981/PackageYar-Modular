@@ -676,6 +676,36 @@ border:1px dashed #ccc;
 border-radius:10px;
 box-sizing:border-box;
 }
+
+/* =========================================================
+   پیش‌نمایش مهر فروشگاه در تنظیمات
+   فقط مخصوص صفحه تنظیمات
+   ========================================================= */
+
+.shop-stamp-preview-container{
+    width:100%;
+    min-height:100px;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    margin-top:15px;
+    padding:15px;
+    background:#f7f7f7;
+    border:1px solid #ddd;
+    border-radius:10px;
+    box-sizing:border-box;
+    overflow:hidden;
+}
+
+.shop-stamp-preview{
+    display:block;
+    width:auto;
+    height:auto;
+    max-width:140px;
+    max-height:70px;
+    object-fit:contain;
+    border-radius:6px;
+}
 /* =========================================================
    پیش‌نمایش بنر هدر در تنظیمات
    ========================================================= */
