@@ -87,7 +87,7 @@ header{
      * ارتفاع محدود می‌شود تا هدر روی
      * دسکتاپ بیش از حد بلند نشود.
      */
-    height:clamp(90px, 20vw, 180px);
+    height:clamp(90px, 20vw, 190px);
 
     object-fit:cover;
 
