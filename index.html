@@ -179,6 +179,15 @@ content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable
     <div class="action-icon">📊</div>
     <div class="action-title">گزارش‌ها</div>
 </div>
+        <        <div class="action" onclick="openCustomerPaymentForm()">
+            <div class="action-icon">📥</div>
+            <div class="action-title">ثبت پرداخت</div>
+        </div>
+
+        <div class="action" onclick="openOutstandingPaymentsModal()">
+            <div class="action-icon">💰</div>
+            <div class="action-title">بدهکاران / مانده حساب</div>
+        </div>
     </div>
 
     <!-- موجودی کم -->
@@ -817,7 +826,7 @@ onclick="saveProduct()">
 <script src="js/modules/print-sales.js"></script>
 <script src="js/modules/settings.js"></script>
 <script src="js/modules/reports.js"></script>
-
+<script src="js/modules/payments.js"></script>
 <script src="js/core/app.js"></script>
 <script src="js/pwa/register.js"></script>
 </body>

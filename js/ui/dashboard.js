@@ -10,10 +10,11 @@ async function updateDashboard(){
     if(!db) return;
 
     try{
-        const [repairs, sales, products] = await Promise.all([
+                const [repairs, sales, products, payments] = await Promise.all([
             safeGetAll("repairs"),
             safeGetAll("salesInvoices"),
-            safeGetAll("products")
+            safeGetAll("products"),
+            safeGetAll("customerPayments")
         ]);
 
         const today = (typeof getTodayJalali === "function") ? getTodayJalali() : "";
@@ -39,8 +40,18 @@ async function updateDashboard(){
             }
         });
 
-        const paidToday = salesPaidToday + repairPaidToday;
+        // پرداخت‌های جداگانه ثبت‌شده با تاریخ امروز
+        let paymentsToday = 0;
+        (payments || []).forEach(function(p){
+            if((p.date || "") === today){
+                paymentsToday += Number(p.amount || 0);
+            }
+        });
 
+        // دریافتی امروز =
+        // پرداخت‌های ثبت‌شده امروز + مبلغ پرداخت‌شده در فاکتورهای امروز
+        const paidToday = paymentsToday + salesPaidToday + repairPaidToday;
+        
         let totalBalance = 0;
         repairs.forEach(function(r){
             totalBalance += Math.max(0, Number(r.totalCost || 0) - Number(r.paidAmount || 0));

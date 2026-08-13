@@ -1,7 +1,7 @@
 const DB_NAME =
 "PackageYarDB";
 const DB_VERSION =
-3;
+4;
 
 function setDatabaseStatus(
 text,
@@ -200,7 +200,23 @@ keyPath:"key"
 );
 
 }
-
+if(
+!database.objectStoreNames.contains(
+"customerPayments"
+)
+){
+    const paymentsStore = database.createObjectStore(
+        "customerPayments",
+        {
+            keyPath: "id",
+            autoIncrement: true
+        }
+    );
+    paymentsStore.createIndex("customerId", "customerId", { unique: false });
+    paymentsStore.createIndex("date", "date", { unique: false });
+    paymentsStore.createIndex("relatedType", "relatedType", { unique: false });
+    paymentsStore.createIndex("relatedId", "relatedId", { unique: false });
+}
 };
 
 request.onsuccess =
