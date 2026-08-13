@@ -43,10 +43,10 @@ function renderSalesInvoiceForm(customers, products){
     customers
         .sort(function(a,b){ return b.id - a.id; })
         .forEach(function(c){
-            customerOptions += `
+                        customerOptions += `
                 <option value="${c.id}">
                     ${escapeHTML(c.name || "بدون نام")}
-                    ${c.phone ? " — " + escapeHTML(c.phone) : ""}
+                    ${c.phone ? " — " + "\u200E" + escapeHTML(c.phone) : ""}
                 </option>`;
         });
 
