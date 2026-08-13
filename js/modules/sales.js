@@ -130,10 +130,19 @@ function renderSalesInvoiceForm(customers, products){
     <div class="card">
 
         <div class="form-group">
-            <label>اجرت / خدمات (اختیاری)</label>
+            <label>اجرت / خدمات </label>
             <input type="number" id="salesLaborCost" min="0" step="1" inputmode="numeric" placeholder="۰" value="0">
         </div>
 
+        <div class="form-group">
+    <label>تخفیف (تومان)</label>
+    <input type="number" id="salesDiscount" min="0" step="1" inputmode="numeric" placeholder="۰" value="0">
+</div>
+
+<div class="form-group">
+    <label>هزینه ایاب و ذهاب (تومان)</label>
+    <input type="number" id="salesTransportCost" min="0" step="1" inputmode="numeric" placeholder="۰" value="0">
+</div>
         <div id="salesInvoiceTotal" class="info-box" style="margin-bottom:12px;">
             مبلغ کل: ۰ تومان
         </div>
@@ -174,14 +183,24 @@ function renderSalesInvoiceForm(customers, products){
         };
     }
 
-    // پر شدن خودکار مبلغ پرداخت‌شده
+        // به‌روزرسانی مبلغ کل و پرداخت‌شده هنگام تغییر اجرت، تخفیف یا ایاب‌وذهاب
     const laborInput = document.getElementById("salesLaborCost");
-    if(laborInput){
-        laborInput.oninput = function(){
-            updateSalesPaidAmount();
-        };
+    const discountInput = document.getElementById("salesDiscount");
+    const transportInput = document.getElementById("salesTransportCost");
+
+    function refreshSalesTotals(){
+        updateSalesInvoiceTotal();
     }
 
+    if(laborInput){
+        laborInput.oninput = refreshSalesTotals;
+    }
+    if(discountInput){
+        discountInput.oninput = refreshSalesTotals;
+    }
+    if(transportInput){
+        transportInput.oninput = refreshSalesTotals;
+    }
     renderSalesInvoiceItems();
     console.log(currentSalesInvoiceItems);
     const statusSelect = document.getElementById("salesPaymentStatus");
@@ -219,6 +238,8 @@ async function saveSalesInvoice(){
     const invoiceDate = document.getElementById("salesInvoiceDate")?.value || getTodayJalali();
     const note = String(document.getElementById("salesInvoiceNote")?.value || "").trim();
     const laborCost = Number(document.getElementById("salesLaborCost")?.value) || 0;
+    const discount = Number(document.getElementById("salesDiscount")?.value) || 0;
+    const transportCost = Number(document.getElementById("salesTransportCost")?.value) || 0;
     const paidAmount = Number(document.getElementById("salesPaidAmount")?.value) || 0;
     const paymentStatus = document.getElementById("salesPaymentStatus")?.value || "پرداخت کامل";
 
@@ -226,7 +247,15 @@ async function saveSalesInvoice(){
         showToast("مبلغ اجرت نامعتبر است.", "error");
         return;
     }
+    if(!Number.isFinite(discount) || discount < 0){
+    showToast("مبلغ تخفیف نامعتبر است.", "error");
+    return;
+}
 
+    if(!Number.isFinite(transportCost) || transportCost < 0){
+    showToast("مبلغ ایاب و ذهاب نامعتبر است.", "error");
+    return;
+}
     // محاسبه مبلغ کالاها
     let itemsTotal = 0;
     for(const item of currentSalesInvoiceItems){
@@ -246,8 +275,11 @@ async function saveSalesInvoice(){
         itemsTotal += item.total;
     }
 
-    const totalAmount = itemsTotal + laborCost;
-
+    const totalAmount = itemsTotal + laborCost + transportCost - discount;
+    if(discount > (itemsTotal + laborCost + transportCost)){
+    showToast("تخفیف نمی‌تواند بیشتر از مبلغ کل باشد.", "error");
+    return;
+}
     if(paidAmount < 0){
         showtoast("مبلغ پرداخت‌شده نمی‌تواند منفی باشد.", "error");
         return;
@@ -259,13 +291,15 @@ async function saveSalesInvoice(){
     }
 
     const confirmed = confirm(
-        "آیا فاکتور فروش ثبت شود؟\n\n" +
-        "تعداد اقلام: " + currentSalesInvoiceItems.length + "\n" +
-        "مبلغ کالاها: " + formatMoney(itemsTotal) + "\n" +
-        "اجرت: " + formatMoney(laborCost) + "\n" +
-        "مبلغ کل: " + formatMoney(totalAmount) + "\n\n" +
-        "موجودی کالاها از انبار کم خواهد شد."
-    );
+    "آیا فاکتور فروش ثبت شود؟\n\n" +
+    "تعداد اقلام: " + currentSalesInvoiceItems.length + "\n" +
+    "مبلغ کالاها: " + formatMoney(itemsTotal) + "\n" +
+    "اجرت: " + formatMoney(laborCost) + "\n" +
+    "ایاب و ذهاب: " + formatMoney(transportCost) + "\n" +
+    "تخفیف: " + formatMoney(discount) + "\n" +
+    "مبلغ کل: " + formatMoney(totalAmount) + "\n\n" +
+    "موجودی کالاها از انبار کم خواهد شد."
+);
 
     if(!confirmed) return;
 
@@ -332,6 +366,8 @@ async function saveSalesInvoice(){
                 note: note,
                 itemsTotal: itemsTotal,
                 laborCost: laborCost,
+                discount: discount,             
+                transportCost: transportCost,    
                 totalAmount: totalAmount,
                 paidAmount: paidAmount,
                 paymentStatus: paymentStatus,
@@ -537,6 +573,8 @@ async function updateSalesInvoice(){
     const invoiceDate = document.getElementById("salesInvoiceDate")?.value || getTodayJalali();
     const note = String(document.getElementById("salesInvoiceNote")?.value || "").trim();
     const laborCost = Number(document.getElementById("salesLaborCost")?.value) || 0;
+    const discount = Number(document.getElementById("salesDiscount")?.value) || 0;
+    const transportCost = Number(document.getElementById("salesTransportCost")?.value) || 0;
     const paidAmount = Number(document.getElementById("salesPaidAmount")?.value) || 0;
     const paymentStatus = document.getElementById("salesPaymentStatus")?.value || "پرداخت کامل";
 
@@ -556,7 +594,16 @@ async function updateSalesInvoice(){
         itemsTotal += item.total;
     }
 
-    const totalAmount = itemsTotal + laborCost;
+    const totalAmount = itemsTotal + laborCost + transportCost - discount;
+    if(discount < 0 || transportCost < 0){
+    alert("تخفیف و ایاب و ذهاب نمی‌توانند منفی باشند.");
+    return;
+}
+
+if(discount > (itemsTotal + laborCost + transportCost)){
+    alert("تخفیف نمی‌تواند بیشتر از مبلغ کل باشد.");
+    return;
+}
 
     if(paidAmount < 0 || paidAmount > totalAmount){
         alert("مبلغ پرداخت‌شده نامعتبر است.");
@@ -664,6 +711,8 @@ async function updateSalesInvoice(){
                 note: note,
                 itemsTotal: itemsTotal,
                 laborCost: laborCost,
+                discount: discount,              
+                transportCost: transportCost,    
                 totalAmount: totalAmount,
                 paidAmount: paidAmount,
                 paymentStatus: paymentStatus,
@@ -862,13 +911,22 @@ async function editSalesInvoice(invoiceId){
             if(el("salesLaborCost")){
                 el("salesLaborCost").value = Number(invoice.laborCost || 0);
             }
+                        if(el("salesLaborCost")){
+                el("salesLaborCost").value = Number(invoice.laborCost || 0);
+            }
+            if(el("salesDiscount")){
+                el("salesDiscount").value = Number(invoice.discount || 0);
+            }
+            if(el("salesTransportCost")){
+                el("salesTransportCost").value = Number(invoice.transportCost || 0);
+            }
             if(el("salesPaidAmount")){
                 el("salesPaidAmount").value = Number(invoice.paidAmount || 0);
             }
             if(el("salesPaymentStatus")){
                 el("salesPaymentStatus").value = invoice.paymentStatus || "پرداخت کامل";
             }
-
+            
             const title = document.querySelector("#inventoryPage .section-title");
             if(title) title.innerText = "✏️ ویرایش فاکتور فروش";
 
@@ -1333,7 +1391,7 @@ async function viewSalesInvoiceDetails(invoiceId){
             ${itemsHTML}
         </div>
 
-        ${
+                ${
             Number(invoice.laborCost || 0) > 0
             ? `
             <div class="card">
@@ -1346,6 +1404,31 @@ async function viewSalesInvoiceDetails(invoiceId){
             : ""
         }
 
+        ${
+            Number(invoice.discount || 0) > 0
+            ? `
+            <div class="card">
+                <div class="customer-info">
+                    💸 تخفیف:
+                    <strong>${formatMoney(invoice.discount)}</strong>
+                </div>
+            </div>
+            `
+            : ""
+        }
+
+        ${
+            Number(invoice.transportCost || 0) > 0
+            ? `
+            <div class="card">
+                <div class="customer-info">
+                    🚗 ایاب و ذهاب:
+                    <strong>${formatMoney(invoice.transportCost)}</strong>
+                </div>
+            </div>
+            `
+            : ""
+        }
         <div class="card">
             <div style="
                 display:flex;
@@ -1735,7 +1818,10 @@ function updateSalesInvoiceTotal(){
     }
 
     const laborCost = Number(document.getElementById("salesLaborCost")?.value) || 0;
-    const total = itemsTotal + laborCost;
+    const discount = Number(document.getElementById("salesDiscount")?.value) || 0;
+    const transportCost = Number(document.getElementById("salesTransportCost")?.value) || 0;
+
+    const total = itemsTotal + laborCost + transportCost - discount;
 
     totalElement.innerHTML = "مبلغ کل: " + formatMoney(total);
 
@@ -1762,7 +1848,10 @@ function updateSalesPaidAmount(){
     }
 
     const laborCost = Number(laborInput?.value) || 0;
-    const total = itemsTotal + laborCost;
+    const discount = Number(document.getElementById("salesDiscount")?.value) || 0;
+    const transportCost = Number(document.getElementById("salesTransportCost")?.value) || 0;
+
+    const total = itemsTotal + laborCost + transportCost - discount;
     const status = statusSelect.value;
 
     if(status === "پرداخت کامل"){

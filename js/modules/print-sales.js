@@ -75,8 +75,10 @@ async function showSalesInvoicePrintPreview(invoiceId){
         });
 
         // ---------- محاسبات ----------
-        const itemsTotal = Number(invoice.itemsTotal != null ? invoice.itemsTotal : 0);
+               const itemsTotal = Number(invoice.itemsTotal != null ? invoice.itemsTotal : 0);
         const laborCost = Number(invoice.laborCost || 0);
+        const discount = Number(invoice.discount || 0);
+        const transportCost = Number(invoice.transportCost || 0);
         const totalAmount = Number(invoice.totalAmount || 0);
         const paidAmount = Number(invoice.paidAmount || 0);
         const remaining = Math.max(0, totalAmount - paidAmount);
@@ -207,9 +209,11 @@ async function showSalesInvoicePrintPreview(invoiceId){
                             <span class="sales-print-label">نام:</span>
                             ${escapeHTML(customerName)}
                         </div>
-                        <div class="sales-print-customer-item">
+                                                <div class="sales-print-customer-item">
                             <span class="sales-print-label">تلفن:</span>
-                            ${escapeHTML(customerPhone)}
+                            <span dir="ltr" style="unicode-bidi: isolate; display: inline-block;">
+                                ${escapeHTML(customerPhone)}
+                            </span>
                         </div>
                         <div class="sales-print-customer-item">
                             <span class="sales-print-label">آدرس:</span>
@@ -237,14 +241,22 @@ async function showSalesInvoicePrintPreview(invoiceId){
                     </table>
                 </div>
 
-                <div class="sales-print-summary">
+                                <div class="sales-print-summary">
                     <div class="sales-print-summary-row">
                         <span class="sales-print-summary-label">جمع کالاها</span>
-                        <span>${formatMoney(itemsTotal || (totalAmount - laborCost))}</span>
+                        <span>${formatMoney(itemsTotal)}</span>
                     </div>
                     <div class="sales-print-summary-row">
                         <span class="sales-print-summary-label">اجرت / خدمات</span>
                         <span>${formatMoney(laborCost)}</span>
+                    </div>
+                    <div class="sales-print-summary-row">
+                        <span class="sales-print-summary-label">ایاب و ذهاب</span>
+                        <span>${formatMoney(transportCost)}</span>
+                    </div>
+                    <div class="sales-print-summary-row">
+                        <span class="sales-print-summary-label">تخفیف</span>
+                        <span>${formatMoney(discount)}</span>
                     </div>
                     <div class="sales-print-summary-row sales-print-summary-total">
                         <span>مبلغ کل</span>
