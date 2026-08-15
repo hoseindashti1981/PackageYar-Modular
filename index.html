@@ -37,16 +37,17 @@ content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable
          ===================================================== -->
 
     <div
-        id="headerBannerContainer"
-        class="header-banner-container"
-        style="display:none;"
+    id="headerBannerContainer"
+    class="header-banner-container"
+    style="display:none;cursor:pointer;"
+    onclick="goHome()"
+    title="بازگشت به داشبورد"
+>
+    <img
+        id="headerBanner"
+        class="header-banner"
+        alt=""
     >
-        <img
-            id="headerBanner"
-            class="header-banner"
-            alt=""
-        >
-    </div>
 
 
     <!-- =====================================================
@@ -622,11 +623,25 @@ onclick="saveDevice()">
 🔩 قطعات مصرف‌شده از انبار
 </div>
 
-<label>انتخاب قطعه از انبار</label>
-<select id="repairProductSelect">
-<option value="">انتخاب قطعه</option>
-</select>
 
+<label>انتخاب قطعه از انبار</label>
+<input type="hidden" id="repairProductId">
+<input type="hidden" id="repairProductName">
+<button type="button" id="repairProductPickerBtn" class="secondary-btn" style="width:100%;text-align:right;"
+  onclick="openProductPicker({
+    title: 'انتخاب قطعه از انبار',
+    priceField: 'salePrice',
+    onSelect: function(product){
+      document.getElementById('repairProductId').value = product.id;
+      document.getElementById('repairProductName').value = product.name || 'بدون نام';
+      var btn = document.getElementById('repairProductPickerBtn');
+      if(btn) btn.textContent = '📦 ' + (product.name || 'بدون نام');
+      var priceInput = document.getElementById('repairProductUnitPrice');
+      if(priceInput) priceInput.value = Number(product.salePrice || 0);
+    }
+  })">
+  انتخاب قطعه...
+</button>
 <label>تعداد</label>
 <input id="repairProductQuantity" type="number" inputmode="numeric" min="1" step="1" placeholder="تعداد">
 
@@ -800,7 +815,30 @@ onclick="saveProduct()">
 </div>
 
 </div>
+</div>
 
+</div>
+
+<!-- مودال انتخاب کالا با جستجو -->
+<div id="productPickerModal" class="modal">
+  <div class="modal-content" style="max-height:85vh;display:flex;flex-direction:column;">
+    <div class="modal-header">
+      <h3 id="productPickerTitle">انتخاب کالا</h3>
+      <div class="close" onclick="closeProductPicker()">×</div>
+    </div>
+    <div class="search-box" style="margin-bottom:12px;">
+      <span class="search-icon">🔍</span>
+      <input
+        id="productPickerSearch"
+        type="search"
+        placeholder="جستجوی نام یا کد کالا..."
+        autocomplete="off">
+    </div>
+    <div id="productPickerList" style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;"></div>
+  </div>
+</div>
+
+<script src="js/utils/dates.js"></script>
 <script src="js/utils/dates.js"></script>
 <script src="js/utils/formatter.js"></script>
 <script src="js/utils/helpers.js"></script>

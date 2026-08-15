@@ -93,39 +93,7 @@ function renderPurchaseInvoiceForm(
         "savePurchaseInvoice()";
 
 
-    /* ========================================================
-       ساخت لیست کالاها
-       ======================================================== */
-
-    let productOptions =
-
-        `<option value="">
-        انتخاب کالا
-        </option>`;
-
-
-    products
-    .forEach(
-        function(product){
-
-            productOptions += `
-
-            <option
-            value="${product.id}">
-
-            ${escapeHTML(
-                product.name ||
-                "بدون نام"
-            )}
-
-            </option>
-
-            `;
-
-        }
-    );
-
-
+   
     /* ========================================================
        تاریخ امروز
 
@@ -278,7 +246,7 @@ function renderPurchaseInvoiceForm(
         </div>
 
 
-        <div class="form-group">
+                <div class="form-group">
 
             <label>
 
@@ -286,13 +254,11 @@ function renderPurchaseInvoiceForm(
 
             </label>
 
-
-            <select
-            id="purchaseProductSelect">
-
-            ${productOptions}
-
-            </select>
+            <input type="hidden" id="purchaseProductId">
+            <input type="hidden" id="purchaseProductName">
+            <button type="button" id="purchaseProductPickerBtn" class="secondary-btn" style="width:100%;text-align:right;">
+                انتخاب کالا...
+            </button>
 
         </div>
 
@@ -447,7 +413,24 @@ function renderPurchaseInvoiceForm(
        کالاهای قبلی دوباره نمایش داده شوند.
        ======================================================== */
 
-    renderPurchaseInvoiceItems();
+        renderPurchaseInvoiceItems();
+
+    const purchasePickerBtn = document.getElementById("purchaseProductPickerBtn");
+    if(purchasePickerBtn){
+        purchasePickerBtn.onclick = function(){
+            openProductPicker({
+                title: "انتخاب کالا برای خرید",
+                priceField: "purchasePrice",
+                onSelect: function(product){
+                    document.getElementById("purchaseProductId").value = product.id;
+                    document.getElementById("purchaseProductName").value = product.name || "بدون نام";
+                    purchasePickerBtn.textContent = "📦 " + (product.name || "بدون نام");
+                    const priceInput = document.getElementById("purchaseProductUnitPrice");
+                    if(priceInput) priceInput.value = Number(product.purchasePrice || 0);
+                }
+            });
+        };
+    }
 
 }
 
@@ -3158,17 +3141,20 @@ function updatePurchaseInvoiceTotal(){
 }
 function addPurchaseInvoiceItem(){
 
-    const select = document.getElementById("purchaseProductSelect");
+    const idInput = document.getElementById("purchaseProductId");
+    const nameInput = document.getElementById("purchaseProductName");
     const quantityInput = document.getElementById("purchaseProductQuantity");
     const priceInput = document.getElementById("purchaseProductUnitPrice");
+    const pickerBtn = document.getElementById("purchaseProductPickerBtn");
 
-    if(!select || !quantityInput || !priceInput){
+    if(!idInput || !quantityInput || !priceInput){
         return;
     }
 
-    const productId = Number(select.value);
+    const productId = Number(idInput.value);
     const quantity = Number(quantityInput.value);
     const unitPrice = Number(priceInput.value);
+    const productName = (nameInput && nameInput.value) ? nameInput.value : "کالا";
 
     if(!Number.isInteger(productId) || productId <= 0){
         alert("لطفاً کالا را انتخاب کنید.");
@@ -3185,10 +3171,6 @@ function addPurchaseInvoiceItem(){
         return;
     }
 
-    const option = select.options[select.selectedIndex];
-    const productName = (option ? option.textContent : "کالا").split("|")[0].trim();
-
-    // اگر کالا قبلاً در فاکتور بود، تعداد را جمع کن
     const existing = currentPurchaseInvoiceItems.find(function(item){
         return Number(item.productId) === productId;
     });
@@ -3207,13 +3189,14 @@ function addPurchaseInvoiceItem(){
         });
     }
 
-    select.value = "";
+    idInput.value = "";
+    if(nameInput) nameInput.value = "";
     quantityInput.value = "";
     priceInput.value = "";
+    if(pickerBtn) pickerBtn.textContent = "انتخاب کالا...";
 
     renderPurchaseInvoiceItems();
 }
-
 
 function renderPurchaseInvoiceItems(){
 

@@ -83,13 +83,12 @@ async function updateDashboard(){
 
 
 function openReportsFromDashboard(){
-    if(typeof showPage === "function"){
-        showPage("settingsPage");
-    }
     if(typeof openReportsPage === "function"){
         openReportsPage();
     }else if(typeof showToast === "function"){
         showToast("ماژول گزارش‌ها بارگذاری نشده است.", "error");
+    }else{
+        alert("ماژول گزارش‌ها بارگذاری نشده است.");
     }
 }
 

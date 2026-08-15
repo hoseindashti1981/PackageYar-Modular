@@ -50,18 +50,7 @@ function renderSalesInvoiceForm(customers, products){
                 </option>`;
         });
 
-    // گزینه‌های کالا
-    let productOptions = `<option value="">انتخاب کالا</option>`;
-    products.forEach(function(p){
-        productOptions += `
-            <option value="${p.id}"
-                data-sale-price="${Number(p.salePrice || 0)}"
-                data-stock="${Number(p.stock || 0)}">
-                ${escapeHTML(p.name || "بدون نام")}
-                | موجودی: ${Number(p.stock || 0).toLocaleString("fa-IR")}
-            </option>`;
-    });
-
+    
     const today = getTodayJalali();
 
     page.innerHTML = `
@@ -101,11 +90,14 @@ function renderSalesInvoiceForm(customers, products){
 
     <div class="card">
 
-        <div class="form-group">
+    <div class="form-group">
             <label>کالا</label>
-            <select id="salesProductSelect">
-                ${productOptions}
-            </select>
+            <input type="hidden" id="salesProductId">
+            <input type="hidden" id="salesProductName">
+            <input type="hidden" id="salesProductStock">
+            <button type="button" id="salesProductPickerBtn" class="secondary-btn" style="width:100%;text-align:right;">
+                انتخاب کالا...
+            </button>
         </div>
 
         <div class="form-group">
@@ -168,18 +160,22 @@ function renderSalesInvoiceForm(customers, products){
     </div>
     `;
 
-    // پر کردن خودکار قیمت فروش هنگام انتخاب کالا
-    const productSelect = document.getElementById("salesProductSelect");
-    if(productSelect){
-        productSelect.onchange = function(){
-            const opt = productSelect.options[productSelect.selectedIndex];
-            const priceInput = document.getElementById("salesProductUnitPrice");
-            if(!priceInput) return;
-            if(!productSelect.value){
-                priceInput.value = "";
-                return;
-            }
-            priceInput.value = Number(opt.dataset.salePrice || 0);
+        // باز کردن انتخاب‌گر کالا با جستجو
+    const salesPickerBtn = document.getElementById("salesProductPickerBtn");
+    if(salesPickerBtn){
+        salesPickerBtn.onclick = function(){
+            openProductPicker({
+                title: "انتخاب کالا برای فروش",
+                priceField: "salePrice",
+                onSelect: function(product){
+                    document.getElementById("salesProductId").value = product.id;
+                    document.getElementById("salesProductName").value = product.name || "بدون نام";
+                    document.getElementById("salesProductStock").value = Number(product.stock || 0);
+                    salesPickerBtn.textContent = "📦 " + (product.name || "بدون نام");
+                    const priceInput = document.getElementById("salesProductUnitPrice");
+                    if(priceInput) priceInput.value = Number(product.salePrice || 0);
+                }
+            });
         };
     }
 
@@ -211,7 +207,8 @@ function renderSalesInvoiceForm(customers, products){
        
     }
  if(typeof showPage === "function"){
-    showPage("inventoryPage");
+    window._skipInventoryReload = true;
+showPage("inventoryPage");
 }
 }
 async function saveSalesInvoice(){
@@ -493,7 +490,8 @@ async function saveSalesInvoice(){
         if(typeof returnToInventoryList === "function"){
             returnToInventoryList();
         }else{
-            showPage("inventoryPage");
+            window._skipInventoryReload = true;
+showPage("inventoryPage");
             loadProducts();
             updateInventorySummary();
         }
@@ -893,7 +891,8 @@ async function editSalesInvoice(invoiceId){
 
         const products = await getAllProductsForPurchase();
 
-        showPage("inventoryPage");
+        window._skipInventoryReload = true;
+showPage("inventoryPage");
         renderSalesInvoiceForm(customers, products);
 
         setTimeout(function(){
@@ -1519,17 +1518,22 @@ function openQuickCustomerForSales(){
 }
 function addSalesInvoiceItem(){
 
-    const select = document.getElementById("salesProductSelect");
+    const idInput = document.getElementById("salesProductId");
+    const nameInput = document.getElementById("salesProductName");
+    const stockInput = document.getElementById("salesProductStock");
     const quantityInput = document.getElementById("salesProductQuantity");
     const priceInput = document.getElementById("salesProductUnitPrice");
+    const pickerBtn = document.getElementById("salesProductPickerBtn");
 
-    if(!select || !quantityInput || !priceInput){
+    if(!idInput || !quantityInput || !priceInput){
         return;
     }
 
-    const productId = Number(select.value);
+    const productId = Number(idInput.value);
     const quantity = Number(quantityInput.value);
     const unitPrice = Number(priceInput.value);
+    const stock = Number(stockInput ? stockInput.value : 0);
+    const productName = (nameInput && nameInput.value) ? nameInput.value : "کالا";
 
     if(!Number.isInteger(productId) || productId <= 0){
         alert("لطفاً کالا را انتخاب کنید.");
@@ -1546,9 +1550,6 @@ function addSalesInvoiceItem(){
         return;
     }
 
-    const option = select.options[select.selectedIndex];
-    const stock = Number(option?.dataset?.stock || 0);
-
     if(stock < quantity){
         alert(
             "موجودی کافی نیست.\n" +
@@ -1557,8 +1558,6 @@ function addSalesInvoiceItem(){
         );
         return;
     }
-
-    const productName = (option ? option.textContent : "کالا").split("|")[0].trim();
 
     const existing = currentSalesInvoiceItems.find(function(item){
         return Number(item.productId) === productId && item.fromRepair !== true;
@@ -1579,9 +1578,12 @@ function addSalesInvoiceItem(){
         });
     }
 
-    select.value = "";
+    idInput.value = "";
+    if(nameInput) nameInput.value = "";
+    if(stockInput) stockInput.value = "";
     quantityInput.value = "";
     priceInput.value = "";
+    if(pickerBtn) pickerBtn.textContent = "انتخاب کالا...";
 
     renderSalesInvoiceItems();
 }

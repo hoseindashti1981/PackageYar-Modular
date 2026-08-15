@@ -582,20 +582,21 @@ document.getElementById("repairPaymentStatus").value =
     document.getElementById("repairNote").value =
         isEditing ? (repair.note || "") : "";
 
-    // پاک کردن ورودی‌های قطعه
-    const productSelect = document.getElementById("repairProductSelect");
+        // پاک کردن ورودی‌های قطعه
+    const productIdInput = document.getElementById("repairProductId");
+    const productNameInput = document.getElementById("repairProductName");
     const quantityInput = document.getElementById("repairProductQuantity");
     const priceInput = document.getElementById("repairProductUnitPrice");
+    const pickerBtn = document.getElementById("repairProductPickerBtn");
 
-    if(productSelect) productSelect.value = "";
+    if(productIdInput) productIdInput.value = "";
+    if(productNameInput) productNameInput.value = "";
     if(quantityInput) quantityInput.value = "";
     if(priceInput) priceInput.value = "";
+    if(pickerBtn) pickerBtn.textContent = "انتخاب قطعه...";
 
     // نمایش قطعات (اگر ویرایش باشد)
     renderRepairParts();
-
-    // بارگذاری لیست قطعات از انبار
-    loadRepairProducts();
 
     document.getElementById("repairModal").classList.add("show");
 }
@@ -867,128 +868,39 @@ async function saveRepair(){
     }
 }
 
-
 function addRepairPart(){
 
-    const productSelect =
-        document.getElementById(
-            "repairProductSelect"
-        );
+    const idInput = document.getElementById("repairProductId");
+    const nameInput = document.getElementById("repairProductName");
+    const quantityInput = document.getElementById("repairProductQuantity");
+    const priceInput = document.getElementById("repairProductUnitPrice");
+    const pickerBtn = document.getElementById("repairProductPickerBtn");
 
-
-    const quantityInput =
-        document.getElementById(
-            "repairProductQuantity"
-        );
-
-
-    const priceInput =
-        document.getElementById(
-            "repairProductUnitPrice"
-        );
-
-
-    if(
-        !productSelect ||
-        !quantityInput ||
-        !priceInput
-    ){
-
+    if(!idInput || !quantityInput || !priceInput){
         return;
-
     }
 
+    const productId = Number(idInput.value);
+    const quantity = Number(quantityInput.value);
+    const unitPrice = Number(priceInput.value);
+    const productName = (nameInput && nameInput.value) ? nameInput.value.trim() : "قطعه";
 
-    const productId =
-        Number(
-            productSelect.value
-        );
-
-
-    const quantity =
-        Number(
-            quantityInput.value
-        );
-
-
-    const unitPrice =
-        Number(
-            priceInput.value
-        );
-
-
-    /* --------------------------------------------------------
-       اعتبارسنجی کالا
-       -------------------------------------------------------- */
-
-    if(
-        !Number.isInteger(
-            productId
-        )
-        ||
-        productId <= 0
-    ){
-
-        alert(
-            "لطفاً قطعه را از لیست انتخاب کنید."
-        );
-
+    if(!Number.isInteger(productId) || productId <= 0){
+        alert("لطفاً قطعه را از لیست انتخاب کنید.");
         return;
-
     }
 
-
-    /* --------------------------------------------------------
-       اعتبارسنجی تعداد
-       -------------------------------------------------------- */
-
-    if(
-        !Number.isInteger(
-            quantity
-        )
-        ||
-        quantity <= 0
-    ){
-
-        alert(
-            "تعداد قطعه باید بیشتر از صفر باشد."
-        );
-
+    if(!Number.isInteger(quantity) || quantity <= 0){
+        alert("تعداد قطعه باید بیشتر از صفر باشد.");
         return;
-
     }
 
-
-    /* --------------------------------------------------------
-       اعتبارسنجی قیمت
-       -------------------------------------------------------- */
-
-    if(
-        !Number.isFinite(
-            unitPrice
-        )
-        ||
-        unitPrice < 0
-    ){
-
-        alert(
-            "قیمت قطعه نامعتبر است."
-        );
-
+    if(!Number.isFinite(unitPrice) || unitPrice < 0){
+        alert("قیمت قطعه نامعتبر است.");
         return;
-
     }
 
-
-    const productName =
-
-        productSelect
-        .options[
-            productSelect.selectedIndex
-        ]
-        .textContent
-        .trim();
-
+   
 
     /* --------------------------------------------------------
        بررسی وجود قطعه تکراری
@@ -1075,17 +987,11 @@ function addRepairPart(){
     /* --------------------------------------------------------
        پاک کردن ورودی‌ها
        -------------------------------------------------------- */
-
-    productSelect.value =
-        "";
-
-
-    quantityInput.value =
-        "";
-
-
-    priceInput.value =
-        "";
+    idInput.value = "";
+    if(nameInput) nameInput.value = "";
+    quantityInput.value = "";
+    priceInput.value = "";
+    if(pickerBtn) pickerBtn.textContent = "انتخاب قطعه...";
 
 
     /* --------------------------------------------------------
@@ -1377,49 +1283,8 @@ function renderRepairParts(){
 
 
 async function loadRepairProducts(){
-
-    const select = document.getElementById("repairProductSelect");
-    if(!select) return;
-
-    try{
-        const products = await getAllProductsForPurchase();
-
-        select.innerHTML = `<option value="">انتخاب قطعه</option>`;
-
-        products.forEach(function(product){
-            const option = document.createElement("option");
-            option.value = product.id;
-            option.textContent =
-                (product.name || "بدون نام") +
-                " | موجودی: " +
-                Number(product.stock || 0).toLocaleString("fa-IR");
-
-            option.dataset.salePrice = Number(product.salePrice || 0);
-            option.dataset.purchasePrice = Number(product.purchasePrice || 0);
-            option.dataset.name = product.name || "بدون نام";
-
-            select.appendChild(option);
-        });
-
-        select.onchange = function(){
-            const option = select.options[select.selectedIndex];
-            const priceInput = document.getElementById("repairProductUnitPrice");
-            if(!priceInput) return;
-
-            if(!select.value){
-                priceInput.value = "";
-                return;
-            }
-
-            priceInput.value = Number(option.dataset.salePrice || 0);
-        };
-
-    }catch(error){
-        console.error("خطا در دریافت قطعات:", error);
-        alert("دریافت لیست قطعات از انبار انجام نشد.");
-    }
+    // دیگر استفاده نمی‌شود — انتخاب قطعه از طریق openProductPicker انجام می‌شود
 }
-
 
 function updateRepairPartsTotal(){
 

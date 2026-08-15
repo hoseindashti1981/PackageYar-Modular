@@ -182,10 +182,17 @@ function renderCustomerPaymentForm(customers, sales, repairs, prefill){
         };
     }
 
-    if(typeof showPage === "function"){
-        showPage(page.id);
-    }
+        // فقط نمایش صفحه؛ showPage نزن تا returnToInventoryList محتوای بدهکاران را پاک نکند
+    document.querySelectorAll(".page").forEach(function(p){
+        p.classList.remove("active");
+    });
+    page.classList.add("active");
+
+    document.querySelectorAll(".nav-item").forEach(function(item){
+        item.classList.remove("active");
+    });
 }
+
 
 
 
@@ -489,8 +496,13 @@ function renderOutstandingPaymentsPage(sales, repairs, customers){
         <div class="section-title" style="font-size:15px;margin-top:22px;">تعمیرات با مانده</div>
         ${repairsHTML}
     `;
+    // فقط نمایش صفحه؛ showPage نزن تا returnToInventoryList محتوای بدهکاران را پاک نکند
+    document.querySelectorAll(".page").forEach(function(p){
+        p.classList.remove("active");
+    });
+    page.classList.add("active");
 
-    if(typeof showPage === "function"){
-        showPage(page.id);
-    }
+    document.querySelectorAll(".nav-item").forEach(function(item){
+        item.classList.remove("active");
+    });
 }

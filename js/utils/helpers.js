@@ -162,3 +162,95 @@ function getAllProductsForPurchase(){
         };
     });
 }
+
+/* ========== انتخاب‌گر کالا با جستجو ========== */
+let _productPickerOnSelect = null;
+let _productPickerAllProducts = [];
+
+function closeProductPicker() {
+    const modal = document.getElementById("productPickerModal");
+    if (modal) modal.classList.remove("show");
+    _productPickerOnSelect = null;
+}
+
+async function openProductPicker(options) {
+    options = options || {};
+    const modal = document.getElementById("productPickerModal");
+    const titleEl = document.getElementById("productPickerTitle");
+    const searchEl = document.getElementById("productPickerSearch");
+    const listEl = document.getElementById("productPickerList");
+
+    if (!modal || !listEl) return;
+
+    if (titleEl) titleEl.textContent = options.title || "انتخاب کالا";
+    _productPickerOnSelect = options.onSelect || null;
+
+    try {
+        _productPickerAllProducts = await getAllProductsForPurchase();
+    } catch (e) {
+        alert("خطا در دریافت لیست کالاها");
+        return;
+    }
+
+    function renderList(filter) {
+        const q = (filter || "").trim().toLowerCase();
+        let products = _productPickerAllProducts.slice();
+
+        if (q) {
+            products = products.filter(function (p) {
+                const name = (p.name || "").toLowerCase();
+                const code = (p.code || "").toLowerCase();
+                return name.includes(q) || code.includes(q);
+            });
+        }
+
+        products.sort(function (a, b) { return b.id - a.id; });
+
+        if (products.length === 0) {
+            listEl.innerHTML = '<div class="card"><div class="empty">کالایی پیدا نشد.</div></div>';
+            return;
+        }
+
+        const priceField = options.priceField || "salePrice";
+        let html = "";
+        products.forEach(function (p) {
+            const stock = Number(p.stock || 0);
+            const price = Number(p[priceField] || 0);
+            html +=
+                '<div class="product-card" style="cursor:pointer;margin-bottom:10px;" data-id="' + p.id + '">' +
+                '<div class="product-title">📦 ' + escapeHTML(p.name || "بدون نام") + '</div>' +
+                '<div class="customer-info" style="margin-top:6px;">' +
+                (p.code ? "کد: " + escapeHTML(p.code) + " | " : "") +
+                "موجودی: " + stock.toLocaleString("fa-IR") +
+                (price ? " | قیمت: " + formatMoney(price) : "") +
+                "</div></div>";
+        });
+        listEl.innerHTML = html;
+
+        listEl.querySelectorAll("[data-id]").forEach(function (card) {
+            card.onclick = function () {
+                const id = Number(card.dataset.id);
+                const product = _productPickerAllProducts.find(function (x) {
+                    return Number(x.id) === id;
+                });
+                if (product && typeof _productPickerOnSelect === "function") {
+                    _productPickerOnSelect(product);
+                }
+                closeProductPicker();
+            };
+        });
+    }
+
+    if (searchEl) {
+        searchEl.value = "";
+        searchEl.oninput = function () {
+            renderList(searchEl.value);
+        };
+    }
+
+    renderList("");
+    modal.classList.add("show");
+    if (searchEl) {
+        setTimeout(function () { searchEl.focus(); }, 120);
+    }
+}
