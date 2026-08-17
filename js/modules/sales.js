@@ -87,7 +87,22 @@ function renderSalesInvoiceForm(customers, products){
     </div>
 
     <div class="section-title">➕ افزودن کالا</div>
-
+            <div class="card" style="margin-bottom:12px;">
+        <div class="form-group" style="margin-bottom:0;">
+            <label>اسکن بارکد / کد کالا</label>
+            <input
+                type="text"
+                id="salesBarcodeScan"
+                placeholder="بارکد را اسکن کنید یا کد را وارد کنید و Enter بزنید"
+                autocomplete="off"
+                inputmode="text"
+                style="font-size:16px;"
+            >
+            <div style="font-size:12px;color:#777;margin-top:6px;">
+                با بارکدخوان اسکن کنید؛ کالا خودکار به فاکتور اضافه می‌شود.
+            </div>
+        </div>
+    </div>
     <div class="card">
 
     <div class="form-group">
@@ -106,10 +121,16 @@ function renderSalesInvoiceForm(customers, products){
         </div>
 
         <div class="form-group">
-            <label>قیمت فروش واحد (قابل تغییر)</label>
-            <input type="number" id="salesProductUnitPrice" min="0" step="1" inputmode="numeric" placeholder="قیمت فروش">
-        </div>
+    <label>قیمت فروش واحد (قابل تغییر)</label>
+    <input type="number" id="salesProductUnitPrice" min="0" step="1" inputmode="numeric" placeholder="قیمت فروش">
+</div>
 
+<div class="form-group" id="salesProductPurchasePriceBox" style="display:none;">
+    <label style="color:#666;font-size:13px;">قیمت خرید (میانگین)</label>
+    <div id="salesProductPurchasePriceDisplay" class="info-box" style="margin:0;padding:8px 12px;background:#f5f5f5;color:#555;font-size:14px;">
+        —
+    </div>
+</div>
         <button type="button" class="primary-btn" style="width:100%;" onclick="addSalesInvoiceItem()">
             ➕ افزودن به فاکتور
         </button>
@@ -159,7 +180,18 @@ function renderSalesInvoiceForm(customers, products){
 
     </div>
     `;
-
+    const barcodeInput = document.getElementById("salesBarcodeScan");
+    if (barcodeInput) {
+        barcodeInput.addEventListener("keydown", function (e) {
+            if (e.key === "Enter") {
+                e.preventDefault();
+                handleSalesBarcodeScan();
+            }
+        });
+        setTimeout(function () {
+            barcodeInput.focus();
+        }, 200);
+    }
         // باز کردن انتخاب‌گر کالا با جستجو
     const salesPickerBtn = document.getElementById("salesProductPickerBtn");
     if(salesPickerBtn){
@@ -173,7 +205,16 @@ function renderSalesInvoiceForm(customers, products){
                     document.getElementById("salesProductStock").value = Number(product.stock || 0);
                     salesPickerBtn.textContent = "📦 " + (product.name || "بدون نام");
                     const priceInput = document.getElementById("salesProductUnitPrice");
-                    if(priceInput) priceInput.value = Number(product.salePrice || 0);
+if(priceInput) priceInput.value = Number(product.salePrice || 0);
+
+// نمایش قیمت خرید میانگین (فقط برای مشاهده)
+const purchaseBox = document.getElementById("salesProductPurchasePriceBox");
+const purchaseDisplay = document.getElementById("salesProductPurchasePriceDisplay");
+if(purchaseBox && purchaseDisplay){
+    const buyPrice = Number(product.purchasePrice || 0);
+    purchaseDisplay.textContent = buyPrice > 0 ? formatMoney(buyPrice) : "ثبت نشده";
+    purchaseBox.style.display = "block";
+}
                 }
             });
         };
@@ -1516,6 +1557,97 @@ function openQuickCustomerForSales(){
         alert("ثبت مشتری جدید انجام نشد.");
     };
 }
+async function handleSalesBarcodeScan() {
+    const input = document.getElementById("salesBarcodeScan");
+    if (!input) return;
+
+    const raw = String(input.value || "").trim();
+    input.value = "";
+
+    if (!raw) {
+        input.focus();
+        return;
+    }
+
+    if (!db) {
+        alert("دیتابیس آماده نیست.");
+        input.focus();
+        return;
+    }
+
+    try {
+        const products = await new Promise(function (resolve, reject) {
+            const tx = db.transaction("products", "readonly");
+            const req = tx.objectStore("products").getAll();
+            req.onsuccess = function () { resolve(req.result || []); };
+            req.onerror = function () { reject(new Error("خواندن کالاها انجام نشد.")); };
+        });
+
+        const code = raw.toUpperCase();
+        const product = products.find(function (p) {
+            const barcode = String(p.barcode || "").trim().toUpperCase();
+            const pCode = String(p.code || "").trim().toUpperCase();
+            return barcode === code || pCode === code;
+        });
+
+        if (!product) {
+            alert("کالایی با این بارکد/کد پیدا نشد:\n" + raw);
+            input.focus();
+            return;
+        }
+
+        const productId = Number(product.id);
+        const stock = Number(product.stock || 0);
+        const unitPrice = Number(product.salePrice || 0);
+        const productName = product.name || "بدون نام";
+
+        if (stock < 1) {
+            alert("موجودی «" + productName + "» صفر است.");
+            input.focus();
+            return;
+        }
+
+        const existing = currentSalesInvoiceItems.find(function (item) {
+            return Number(item.productId) === productId && item.fromRepair !== true;
+        });
+
+        if (existing) {
+            const newQty = Number(existing.quantity) + 1;
+            if (newQty > stock) {
+                alert(
+                    "موجودی کافی نیست.\n" +
+                    "موجودی: " + stock.toLocaleString("fa-IR") + "\n" +
+                    "در فاکتور: " + Number(existing.quantity).toLocaleString("fa-IR")
+                );
+                input.focus();
+                return;
+            }
+            existing.quantity = newQty;
+            existing.total = existing.quantity * Number(existing.unitPrice);
+        } else {
+            currentSalesInvoiceItems.push({
+                productId: productId,
+                productName: productName,
+                quantity: 1,
+                unitPrice: unitPrice,
+                total: unitPrice,
+                fromRepair: false
+            });
+        }
+
+        renderSalesInvoiceItems();
+
+        if (typeof showToast === "function") {
+            showToast("افزوده شد: " + productName, "success");
+        }
+
+        input.focus();
+    } catch (error) {
+        console.error(error);
+        alert(error.message || "خطا در اسکن بارکد.");
+        input.focus();
+    }
+}
 function addSalesInvoiceItem(){
 
     const idInput = document.getElementById("salesProductId");
@@ -1584,7 +1716,8 @@ function addSalesInvoiceItem(){
     quantityInput.value = "";
     priceInput.value = "";
     if(pickerBtn) pickerBtn.textContent = "انتخاب کالا...";
-
+    const purchaseBox = document.getElementById("salesProductPurchasePriceBox");
+    if(purchaseBox) purchaseBox.style.display = "none";
     renderSalesInvoiceItems();
 }
 

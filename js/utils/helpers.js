@@ -254,3 +254,37 @@ async function openProductPicker(options) {
         setTimeout(function () { searchEl.focus(); }, 120);
     }
 }
+function openMarketPriceSearch(productName) {
+    const name = String(productName || "").trim();
+    if (!name) {
+        alert("نام کالا مشخص نیست.");
+        return;
+    }
+    const torobUrl = "https://torob.com/search/?query=" + encodeURIComponent(name);
+    window.open(torobUrl, "_blank", "noopener,noreferrer");
+}
+
+function openMarketPriceSearchById(productId) {
+    if (!db) {
+        alert("دیتابیس آماده نیست.");
+        return;
+    }
+    const id = Number(productId);
+    if (!Number.isInteger(id) || id <= 0) {
+        alert("شناسه کالا نامعتبر است.");
+        return;
+    }
+    const tx = db.transaction("products", "readonly");
+    const req = tx.objectStore("products").get(id);
+    req.onsuccess = function () {
+        const product = req.result;
+        if (!product || !product.name) {
+            alert("کالا پیدا نشد.");
+            return;
+        }
+        openMarketPriceSearch(product.name);
+    };
+    req.onerror = function () {
+        alert("خطا در دریافت کالا.");
+    };
+}

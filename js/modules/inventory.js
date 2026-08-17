@@ -138,222 +138,122 @@ editingProductId =
 null;
 
 }
+function getNextPyCode(products) {
+    let maxNum = 0;
 
+    (products || []).forEach(function (p) {
+        const raw = String(p.barcode || p.code || "").trim().toUpperCase();
+        const match = raw.match(/^PY-(\d+)$/);
+        if (match) {
+            const n = parseInt(match[1], 10);
+            if (n > maxNum) maxNum = n;
+        }
+    });
 
-function saveProduct(){
-
-if(!db){
-
-alert(
-"دیتابیس هنوز آماده نیست."
-);
-
-return;
-
+    return "PY-" + String(maxNum + 1).padStart(3, "0");
 }
 
-const name =
-document
-.getElementById(
-"productName"
-)
-.value
-.trim();
 
-const code =
-document
-.getElementById(
-"productCode"
-)
-.value
-.trim();
+function saveProduct() {
 
-const category =
-document
-.getElementById(
-"productCategory"
-)
-.value
-.trim();
+    if (!db) {
+        alert("دیتابیس هنوز آماده نیست.");
+        return;
+    }
 
-const unit =
-document
-.getElementById(
-"productUnit"
-)
-.value;
+    const name = document.getElementById("productName").value.trim();
+    const code = document.getElementById("productCode").value.trim();
+    const category = document.getElementById("productCategory").value.trim();
+    const unit = document.getElementById("productUnit").value;
+    const purchasePrice = Number(document.getElementById("productPurchasePrice").value) || 0;
+    const salePrice = Number(document.getElementById("productSalePrice").value) || 0;
+    const minStock = Number(document.getElementById("productMinStock").value) || 0;
+    const note = document.getElementById("productNote").value.trim();
 
-const purchasePrice =
-Number(
-document
-.getElementById(
-"productPurchasePrice"
-)
-.value
-) || 0;
+    if (!name) {
+        alert("لطفاً نام کالا را وارد کنید.");
+        return;
+    }
 
-const salePrice =
-Number(
-document
-.getElementById(
-"productSalePrice"
-)
-.value
-) || 0;
+    const readTx = db.transaction("products", "readonly");
+    const readReq = readTx.objectStore("products").getAll();
 
-const minStock =
-Number(
-document
-.getElementById(
-"productMinStock"
-)
-.value
-) || 0;
+    readReq.onerror = function () {
+        alert("خواندن لیست کالاها برای ساخت بارکد انجام نشد.");
+    };
 
-const note =
-document
-.getElementById(
-"productNote"
-)
-.value
-.trim();
+    readReq.onsuccess = function () {
+        const allProducts = readReq.result || [];
 
-if(!name){
+        let finalCode = code;
 
-alert(
-"لطفاً نام کالا را وارد کنید."
-);
+        // کالای جدید + کد خالی → ساخت خودکار PY-xxx
+        if (!finalCode && editingProductId === null) {
+            finalCode = getNextPyCode(allProducts);
+        }
 
-return;
+        const finalBarcode = finalCode || "";
 
-}
+        const transaction = db.transaction("products", "readwrite");
+        const store = transaction.objectStore("products");
 
-const transaction =
-db.transaction(
-"products",
-"readwrite"
-);
+        if (editingProductId !== null) {
+            const request = store.get(editingProductId);
 
-const store =
-transaction
-.objectStore(
-"products"
-);
+            request.onsuccess = function () {
+                const product = request.result;
 
-if(
-editingProductId !== null
-){
+                if (!product) {
+                    alert("کالا پیدا نشد.");
+                    return;
+                }
 
-const request =
-store.get(
-editingProductId
-);
+                product.name = name;
+                product.code = finalCode;
+                product.barcode = finalBarcode || product.barcode || finalCode;
+                product.category = category;
+                product.unit = unit;
+                product.purchasePrice = purchasePrice;
+                product.salePrice = salePrice;
+                product.minStock = minStock;
+                product.note = note;
+                product.updatedAt = new Date().toISOString();
 
-request.onsuccess =
-function(){
+                store.put(product);
+            };
 
-const product =
-request.result;
+            request.onerror = function () {
+                alert("خطا در دریافت کالا برای ویرایش.");
+            };
 
-if(!product){
+        } else {
+            store.add({
+                name: name,
+                code: finalCode,
+                barcode: finalBarcode,
+                category: category,
+                unit: unit,
+                purchasePrice: purchasePrice,
+                salePrice: salePrice,
+                minStock: minStock,
+                stock: 0,
+                note: note,
+                createdAt: new Date().toISOString(),
+                createdDate: getTodayJalali()
+            });
+        }
 
-alert(
-"کالا پیدا نشد."
-);
+        transaction.oncomplete = function () {
+            closeProductModal();
+            loadProducts();
+            updateInventorySummary();
+            updateDashboard();
+        };
 
-return;
-
-}
-
-product.name =
-name;
-
-product.code =
-code;
-
-product.category =
-category;
-
-product.unit =
-unit;
-
-product.purchasePrice =
-purchasePrice;
-
-product.salePrice =
-salePrice;
-
-product.minStock =
-minStock;
-
-product.note =
-note;
-
-product.updatedAt =
-new Date()
-.toISOString();
-
-store.put(
-product
-);
-
-};
-
-}else{
-
-store.add({
-
-name:name,
-
-code:code,
-
-category:category,
-
-unit:unit,
-
-purchasePrice:purchasePrice,
-
-salePrice:salePrice,
-
-minStock:minStock,
-
-stock:0,
-
-note:note,
-
-createdAt:
-new Date()
-.toISOString(),
-
-createdDate:
-getTodayJalali()
-
-});
-
-}
-
-transaction.oncomplete =
-function(){
-
-closeProductModal();
-
-loadProducts();
-
-updateInventorySummary();
-
-updateDashboard();
-
-};
-
-transaction.onerror =
-function(){
-
-alert(
-"خطا در ذخیره کالا."
-);
-
-};
-
+        transaction.onerror = function () {
+            alert("خطا در ذخیره کالا.");
+        };
+    };
 }
 
 
@@ -647,6 +547,24 @@ product.salePrice
 <div class="product-actions">
 
 <button
+type="button"
+class="secondary-btn"
+data-name="${escapeHTML(product.name || "")}"
+onclick="event.stopPropagation(); openMarketPriceSearch(this.dataset.name)">
+
+🔍 قیمت بازار
+
+</button>
+<button
+type="button"
+class="secondary-btn"
+onclick="event.stopPropagation(); printProductBarcodeLabel(${product.id})">
+
+🏷️ برچسب
+
+</button>
+
+<button
 class="edit-btn"
 onclick="editProduct(${product.id})">
 
@@ -663,7 +581,6 @@ onclick="deleteProduct(${product.id})">
 </button>
 
 </div>
-
 `;
 
 attachProductCardClick(
@@ -2082,10 +1999,24 @@ function renderProductProfile(
                 </div>
 
 
+                                <div
+                class="customer-info">
+
+                کد کالا:
+
+                ${
+                    escapeHTML(
+                        product.code || "—"
+                    )
+                }
+
+                </div>
+
+
                 <div
                 class="customer-info">
 
-                شناسه کالا:
+                شناسه داخلی:
 
                 ${
                     product.id
@@ -2278,67 +2209,55 @@ function renderProductProfile(
         </div>
 
 
-        <div
-        class="card-actions product-card-actions">
+                <div
+               <div class="card-actions product-card-actions">
 
+            <button
+            type="button"
+            class="secondary-btn"
+            data-name="${escapeHTML(product.name || "")}"
+            onclick="openMarketPriceSearch(this.dataset.name)">
+            🔍 قیمت بازار
+            </button>
+
+            <button
+            type="button"
+            class="secondary-btn"
+            onclick="printProductBarcodeLabel(${product.id})">
+            🏷️ چاپ برچسب
+            </button>
 
             <button
             class="edit-btn"
-            onclick="editProductFromProfile(
-                ${product.id}
-            )">
-
+            onclick="editProductFromProfile(${product.id})">
             ✏️ ویرایش کالا
-
             </button>
-
 
             <button
             class="danger-btn"
-            onclick="deleteProductFromProfile(
-                ${product.id}
-            )">
-
+            onclick="deleteProductFromProfile(${product.id})">
             🗑️ حذف کالا
-
             </button>
-
 
             <button
             class="secondary-btn"
-            onclick="manualProductStockOut(
-                ${product.id}
-            )">
-
+            onclick="manualProductStockOut(${product.id})">
             📤 خروج کالا
-
             </button>
-
 
             <button
             class="primary-btn"
-            onclick="adjustProductStock(
-                ${product.id}
-            )">
-
+            onclick="adjustProductStock(${product.id})">
             ⚖️ اصلاح موجودی
-
             </button>
-
 
             <button
             class="primary-btn"
-            onclick="returnProductStock(
-                ${product.id}
-            )">
-
+            onclick="returnProductStock(${product.id})">
             🔄 برگشت کالا
-
             </button>
-
 
         </div>
-
 
     </div>
 
@@ -4580,4 +4499,160 @@ function showMarkdownInventoryPreview(
         products;
 
 }
+async function printProductBarcodeLabel(productId) {
+    if (!db) {
+        alert("دیتابیس آماده نیست.");
+        return;
+    }
 
+    if (typeof JsBarcode !== "function") {
+        alert("کتابخانه بارکد لود نشده است.\nصفحه را یک‌بار کامل رفرش کنید.");
+        return;
+    }
+
+    const numericId = Number(productId);
+    if (!Number.isInteger(numericId) || numericId <= 0) {
+        alert("شناسه کالا نامعتبر است.");
+        return;
+    }
+
+    try {
+        const product = await new Promise(function (resolve, reject) {
+            const tx = db.transaction("products", "readonly");
+            const req = tx.objectStore("products").get(numericId);
+            req.onsuccess = function () { resolve(req.result || null); };
+            req.onerror = function () { reject(new Error("دریافت کالا انجام نشد.")); };
+        });
+
+        if (!product) {
+            alert("کالا پیدا نشد.");
+            return;
+        }
+
+        const barcodeValue = String(product.barcode || product.code || "").trim();
+        if (!barcodeValue) {
+            alert("برای این کالا بارکد/کد تعریف نشده است.");
+            return;
+        }
+
+        const page = document.getElementById("inventoryPage");
+        if (!page) {
+            alert("صفحه انبار پیدا نشد.");
+            return;
+        }
+
+        const productName = product.name || "بدون نام";
+        const salePrice = Number(product.salePrice || 0);
+
+        page.innerHTML = `
+            <div class="back-btn label-no-print" onclick="openProductProfile(${numericId})">
+                ← بازگشت به کارت کالا
+            </div>
+
+            <div class="section-title label-no-print">🏷️ پیش‌نمایش برچسب بارکد</div>
+
+            <div class="label-no-print" style="margin-bottom:15px;">
+                <button type="button" class="primary-btn" style="width:100%;margin-bottom:10px;"
+                    onclick="window.print()">
+                    🖨️ چاپ برچسب
+                </button>
+                <button type="button" class="secondary-btn" style="width:100%;"
+                    onclick="openProductProfile(${numericId})">
+                    ← بازگشت
+                </button>
+            </div>
+
+            <div class="barcode-label-sheet">
+                <div class="barcode-label">
+                    <div class="barcode-label-name">${escapeHTML(productName)}</div>
+                    <svg id="productBarcodeSvg"></svg>
+                    <div class="barcode-label-code">${escapeHTML(barcodeValue)}</div>
+                    <div class="barcode-label-price">${salePrice > 0 ? formatMoney(salePrice) : ""}</div>
+                </div>
+            </div>
+
+            <style>
+                .barcode-label-sheet {
+                    display: flex;
+                    justify-content: center;
+                    padding: 10px;
+                }
+                .barcode-label {
+                    width: 50mm;
+                    min-height: 30mm;
+                    border: 1px dashed #999;
+                    padding: 6px 8px;
+                    text-align: center;
+                    background: #fff;
+                    color: #000;
+                    box-sizing: border-box;
+                }
+                .barcode-label-name {
+                    font-size: 12px;
+                    font-weight: bold;
+                    margin-bottom: 4px;
+                    line-height: 1.3;
+                    max-height: 2.6em;
+                    overflow: hidden;
+                }
+                .barcode-label-code {
+                    font-size: 12px;
+                    font-weight: bold;
+                    margin-top: 2px;
+                    letter-spacing: 1px;
+                }
+                .barcode-label-price {
+                    font-size: 11px;
+                    margin-top: 2px;
+                }
+                #productBarcodeSvg {
+                    max-width: 100%;
+                    height: 40px;
+                }
+
+                @media print {
+                    body * {
+                        visibility: hidden !important;
+                    }
+                    .barcode-label-sheet,
+                    .barcode-label-sheet * {
+                        visibility: visible !important;
+                    }
+                    .label-no-print {
+                        display: none !important;
+                    }
+                    .barcode-label-sheet {
+                        position: absolute;
+                        left: 0;
+                        top: 0;
+                        width: 100%;
+                        padding: 0;
+                        margin: 0;
+                    }
+                    .barcode-label {
+                        border: none;
+                        margin: 0;
+                    }
+                }
+            </style>
+        `;
+
+        // رسم بارکد
+        JsBarcode("#productBarcodeSvg", barcodeValue, {
+            format: "CODE128",
+            width: 2,
+            height: 40,
+            displayValue: false,
+            margin: 0
+        });
+
+        if (typeof showPage === "function") {
+            window._skipInventoryReload = true;
+            showPage("inventoryPage");
+        }
+
+    } catch (error) {
+        console.error(error);
+        alert(error.message || "خطا در آماده‌سازی برچسب.");
+    }
+}
