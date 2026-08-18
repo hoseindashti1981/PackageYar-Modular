@@ -111,6 +111,7 @@ header{
     gap:16px;
 
     min-width:0;
+    display: none !important;
 }
 
 

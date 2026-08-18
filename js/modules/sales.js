@@ -110,8 +110,10 @@ function renderSalesInvoiceForm(customers, products){
             <input type="hidden" id="salesProductId">
             <input type="hidden" id="salesProductName">
             <input type="hidden" id="salesProductStock">
+            <input type="hidden" id="salesProductPurchasePrice">
             <button type="button" id="salesProductPickerBtn" class="secondary-btn" style="width:100%;text-align:right;">
-                انتخاب کالا...
+               
+            انتخاب کالا...
             </button>
         </div>
 
@@ -203,9 +205,11 @@ function renderSalesInvoiceForm(customers, products){
                     document.getElementById("salesProductId").value = product.id;
                     document.getElementById("salesProductName").value = product.name || "بدون نام";
                     document.getElementById("salesProductStock").value = Number(product.stock || 0);
+                    document.getElementById("salesProductPurchasePrice").value = Number(product.purchasePrice || 0);
                     salesPickerBtn.textContent = "📦 " + (product.name || "بدون نام");
                     const priceInput = document.getElementById("salesProductUnitPrice");
-if(priceInput) priceInput.value = Number(product.salePrice || 0);
+                    const buyPrice = Number(product.purchasePrice || 0);
+                    if(priceInput) priceInput.value = Number(product.salePrice || 0);
 
 // نمایش قیمت خرید میانگین (فقط برای مشاهده)
 const purchaseBox = document.getElementById("salesProductPurchasePriceBox");
@@ -327,7 +331,39 @@ async function saveSalesInvoice(){
         showtoast("مبلغ پرداخت‌شده نمی‌تواند بیشتر از مبلغ کل باشد.", "error");
         return;
     }
+        // --- بررسی نهایی حاشیه سود همه اقلام ---
+    const lowMarginItems = [];
+    for (const item of currentSalesInvoiceItems) {
+        if (item.fromRepair === true) continue;
 
+        const buy = Number(item.purchasePrice) || 0;
+        const sell = Number(item.unitPrice) || 0;
+
+        if (buy > 0) {
+            const minAllowed = buy * (1 + MIN_MARGIN_PERCENT / 100);
+            if (sell < minAllowed) {
+                lowMarginItems.push({
+                    name: item.productName,
+                    buy: buy,
+                    sell: sell,
+                    margin: ((sell - buy) / buy * 100).toFixed(1)
+                });
+            }
+        }
+    }
+
+    if (lowMarginItems.length > 0) {
+        let msg = "⚠️ هشدار: " + lowMarginItems.length + " کالا با حاشیه سود پایین یا ضرر وجود دارد:\n\n";
+        lowMarginItems.forEach(function(it, i) {
+            msg += (i + 1) + ". " + it.name +
+                   "\n   خرید: " + formatMoney(it.buy) +
+                   " | فروش: " + formatMoney(it.sell) +
+                   " | حاشیه: " + it.margin + "٪\n\n";
+        });
+        msg += "آیا با این شرایط فاکتور ثبت شود؟";
+
+        if (!confirm(msg)) return;
+    }
     const confirmed = confirm(
     "آیا فاکتور فروش ثبت شود؟\n\n" +
     "تعداد اقلام: " + currentSalesInvoiceItems.length + "\n" +
@@ -434,7 +470,7 @@ async function saveSalesInvoice(){
                 itemsStore.add({
                     invoiceId: invoiceId,
                     invoiceType: "فروش",
-                    productId: productId,
+                    purchasePriceAtSale: Number(item.purchasePrice) || 0, 
                     productName: item.productName,
                     quantity: qty,
                     salePrice: unitPrice,
@@ -443,6 +479,7 @@ async function saveSalesInvoice(){
                     date: invoiceDate,
                     fromRepair: item.fromRepair === true,
                     createdAt: now.toISOString()
+                    
                 });
                 if(item.fromRepair === true){
                     return;
@@ -1625,14 +1662,23 @@ async function handleSalesBarcodeScan() {
             existing.quantity = newQty;
             existing.total = existing.quantity * Number(existing.unitPrice);
         } else {
-            currentSalesInvoiceItems.push({
-                productId: productId,
-                productName: productName,
-                quantity: 1,
-                unitPrice: unitPrice,
-                total: unitPrice,
-                fromRepair: false
-            });
+            const purchasePrice = Number(product.purchasePrice || 0);
+
+// هشدار حاشیه سود (برای بارکد هم)
+if (!checkLowMarginWarning(unitPrice, purchasePrice, productName)) {
+    input.focus();
+    return;
+}
+
+currentSalesInvoiceItems.push({
+    productId: productId,
+    productName: productName,
+    quantity: 1,
+    unitPrice: unitPrice,
+    purchasePrice: purchasePrice,   // ← اضافه شد
+    total: unitPrice,
+    fromRepair: false
+});
         }
 
         renderSalesInvoiceItems();
@@ -1647,6 +1693,40 @@ async function handleSalesBarcodeScan() {
         alert(error.message || "خطا در اسکن بارکد.");
         input.focus();
     }
+}
+// ==================== هشدار حاشیه سود پایین ====================
+// درصد حداقل سود (فعلاً ثابت ۱٪ — بعداً می‌تونی از تنظیمات بخونی)
+const MIN_MARGIN_PERCENT = 1;
+
+/**
+ * بررسی حاشیه سود پایین
+ * @returns {boolean} true = کاربر تایید کرد یا مشکلی نیست | false = کاربر انصراف داد
+ */
+function checkLowMarginWarning(unitPrice, purchasePrice, productName) {
+    const buy = Number(purchasePrice) || 0;
+    const sell = Number(unitPrice) || 0;
+
+    // اگر قیمت خرید ثبت نشده، هشدار نده
+    if (buy <= 0) return true;
+
+    const minAllowed = buy * (1 + MIN_MARGIN_PERCENT / 100);
+
+    if (sell < minAllowed) {
+        const marginPercent = ((sell - buy) / buy * 100).toFixed(1);
+        const isLoss = sell < buy;
+
+        const message =
+            (isLoss ? "⚠️ فروش با ضرر!\n\n" : "⚠️ حاشیه سود خیلی پایین!\n\n") +
+            "کالا: " + (productName || "نامشخص") + "\n" +
+            "قیمت خرید: " + formatMoney(buy) + "\n" +
+            "قیمت فروش: " + formatMoney(sell) + "\n" +
+            "حداقل پیشنهادی (" + MIN_MARGIN_PERCENT + "٪ سود): " + formatMoney(Math.ceil(minAllowed)) + "\n" +
+            "حاشیه فعلی: " + marginPercent + "٪\n\n" +
+            "آیا مطمئن هستید که می‌خواهید با این قیمت ادامه دهید؟";
+
+        return confirm(message);
+    }
+    return true;
 }
 function addSalesInvoiceItem(){
 
@@ -1666,7 +1746,13 @@ function addSalesInvoiceItem(){
     const unitPrice = Number(priceInput.value);
     const stock = Number(stockInput ? stockInput.value : 0);
     const productName = (nameInput && nameInput.value) ? nameInput.value : "کالا";
+        // --- هشدار حاشیه سود ---
+    const purchasePriceInput = document.getElementById("salesProductPurchasePrice");
+    const purchasePrice = Number(purchasePriceInput ? purchasePriceInput.value : 0);
 
+    if (!checkLowMarginWarning(unitPrice, purchasePrice, productName)) {
+        return; // کاربر انصراف داد
+    }
     if(!Number.isInteger(productId) || productId <= 0){
         alert("لطفاً کالا را انتخاب کنید.");
         return;
@@ -1698,6 +1784,7 @@ function addSalesInvoiceItem(){
     if(existing){
         existing.quantity = Number(existing.quantity) + quantity;
         existing.unitPrice = unitPrice;
+        existing.purchasePrice = purchasePrice;
         existing.total = existing.quantity * existing.unitPrice;
     }else{
         currentSalesInvoiceItems.push({
@@ -1705,6 +1792,7 @@ function addSalesInvoiceItem(){
             productName: productName,
             quantity: quantity,
             unitPrice: unitPrice,
+            purchasePrice: purchasePrice,
             total: quantity * unitPrice,
             fromRepair: false
         });
@@ -1718,6 +1806,7 @@ function addSalesInvoiceItem(){
     if(pickerBtn) pickerBtn.textContent = "انتخاب کالا...";
     const purchaseBox = document.getElementById("salesProductPurchasePriceBox");
     if(purchaseBox) purchaseBox.style.display = "none";
+    if (purchasePriceInput) purchasePriceInput.value = "";
     renderSalesInvoiceItems();
 }
 
@@ -1761,12 +1850,21 @@ function applySalesItemFieldChange(input){
         currentSalesInvoiceItems[index].quantity = qty;
     }
 
-    if(field === "unitPrice"){
+        if(field === "unitPrice"){
         const price = Number(raw);
         if(!Number.isFinite(price) || price < 0){
             input.value = currentSalesInvoiceItems[index].unitPrice;
             return;
         }
+
+        // --- هشدار حاشیه سود ---
+        const item = currentSalesInvoiceItems[index];
+        if (!checkLowMarginWarning(price, item.purchasePrice, item.productName)) {
+            // کاربر انصراف داد → قیمت قبلی را برگردان
+            input.value = item.unitPrice;
+            return;
+        }
+
         currentSalesInvoiceItems[index].unitPrice = price;
     }
 
